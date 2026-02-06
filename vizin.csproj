@@ -15,4 +15,10 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTO\User\Interfaces\" />
+    <Folder Include="Repositories\User\Interfaces\" />
+    <Folder Include="Services\User\Interfaces\" />
+  </ItemGroup>
+
 </Project>
