@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\User\" />
     <Folder Include="DTO\User\Interfaces\" />
     <Folder Include="Repositories\User\Interfaces\" />
     <Folder Include="Services\User\Interfaces\" />
