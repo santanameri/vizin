@@ -8,5 +8,5 @@ public interface IUserService
 {
     public Task<UserResponseDTO?> GetUser(Guid id);
     public Task<UserResponseDTO> CreateUser(CreateUserRequestDTO request);
-    public Task<TbUser?> LoginUser(string email, string providedPassword, PasswordHasher<TbUser> passwordHasher);
+    public Task<TbUser?> LoginUser(string email, string providedPassword);
 }

@@ -10,6 +10,5 @@ namespace vizin.Repositories.User
        public Task<TbUser?> HandleLogin(string email);
        public Task<TbUser?> GetUserByEmailAsync(string email);
        public Task<TbUser> CreateUserAsync(TbUser user);
-
     }
 }

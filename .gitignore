@@ -28,4 +28,5 @@ obj/
 ## Configurações locais (Segurança)
 appsettings.Development.json
 appsettings.Local.json
+appsettings.json
 .env

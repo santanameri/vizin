@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.Property;
 using vizin.Services.Property.Interfaces;
 
 namespace vizin.Controllers.Property;
-
+//[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class PropertyController : ControllerBase

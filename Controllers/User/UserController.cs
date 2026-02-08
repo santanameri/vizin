@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using vizin.DTO.Login;
 using vizin.DTO.User;
+using vizin.Models.Enum;
 using vizin.Services.User.Interface;
 
 namespace vizin.Controllers;
@@ -9,10 +11,12 @@ namespace vizin.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _service;
+    private readonly ITokenService _tokenService;
 
-    public UserController(IUserService service)
+    public UserController(IUserService service, ITokenService tokenService)
     {
         _service = service;
+        _tokenService = tokenService;
     }
 
     [HttpGet("{id:guid}", Name = "GetUser")]
@@ -50,5 +54,22 @@ public class UserController : ControllerBase
 
         }
     }
-    
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto login)
+    {
+        var user = await _service.LoginUser(login.Email, login.Password);
+        if (user == null)
+        {
+            return Unauthorized(new { message = "Email ou senha inválidos" });
+        }
+
+        var token = _tokenService.GenerateToken(user);
+        return Ok( new
+        {
+            Token = token,
+            UserId = user.Id,
+            Role = ((UserType)user.Type).ToString()
+        });
+    }
 }

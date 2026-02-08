@@ -28,7 +28,7 @@ public class UserService : IUserService
         return userDto;
     }
 
-    public async Task<TbUser?> LoginUser(string email, string providedPassword, PasswordHasher<TbUser> passwordHasher)
+    public async Task<TbUser?> LoginUser(string email, string providedPassword)
     { 
         var user = await _repository.HandleLogin(email);
         if (user == null) 
@@ -36,9 +36,9 @@ public class UserService : IUserService
             throw new Exception("Email ou senha incorretos."); 
         }
         
-        var result = passwordHasher.VerifyHashedPassword(user, user.Password, providedPassword);
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(providedPassword, user.Password);
         
-        if (result == PasswordVerificationResult.Failed)
+        if (!isPasswordValid)
         {
            throw new Exception("A senha está incorreta!");
         }
