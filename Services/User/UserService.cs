@@ -1,7 +1,8 @@
-using vizin.Repositories;
+using Microsoft.AspNetCore.Identity;
 using vizin.Repositories.User;
 using vizin.DTO.User;
 using vizin.Models;
+using vizin.Services.User.Interface;
 
 namespace vizin.Services.User;
 
@@ -13,28 +14,38 @@ public class UserService : IUserService
         _repository = repository;
     }
 
-   public List<UserResponseDTO> GetUsers()
+   public async Task<UserResponseDTO?> GetUser(Guid userId)
     {
-        
-         List<TbUser> tbUsers = _repository.SelectAllUsers();
-
-        List<UserResponseDTO> usersDTO = new List<UserResponseDTO>();
-
-        foreach(TbUser tbUser in tbUsers)
+        var user = await _repository.SelectUserById(userId);
+        if (user == null) return null;
+        var userDto = new UserResponseDTO()
         {
-            UserResponseDTO usuarioRetorno = new UserResponseDTO();
-            usuarioRetorno.Id = tbUser.Id;
-            usuarioRetorno.Name = tbUser.Name;
-            usuarioRetorno.Email = tbUser.Email;
-            usuarioRetorno.CreatedAt = tbUser.CreatedAt;
-
-            usersDTO.Add(usuarioRetorno);
-        }
-
-        return usersDTO;
+            Name = user.Name,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt,
+            Type = (int)user.Type
+        };
+        return userDto;
     }
 
-    public async Task<UserResponseDTO> CreateUser(CreateUserRequestDTO request)
+    public async Task<TbUser?> LoginUser(string email, string providedPassword, PasswordHasher<TbUser> passwordHasher)
+    { 
+        var user = await _repository.HandleLogin(email);
+        if (user == null) 
+        { 
+            throw new Exception("Email ou senha incorretos."); 
+        }
+        
+        var result = passwordHasher.VerifyHashedPassword(user, user.Password, providedPassword);
+        
+        if (result == PasswordVerificationResult.Failed)
+        {
+           throw new Exception("A senha está incorreta!");
+        }
+        return user;
+    }
+   
+   public async Task<UserResponseDTO> CreateUser(CreateUserRequestDTO request)
     {
         var existingUser = await _repository.GetUserByEmailAsync(request.Email);
 
@@ -60,8 +71,8 @@ public class UserService : IUserService
             Id = createUser.Id,
             Name = createUser.Name,
             Email = createUser.Email,
-            CreatedAt = createUser.CreatedAt
+            CreatedAt = createUser.CreatedAt,
+            Type = (int)createUser.Type
         };
     }
-
 }

@@ -1,12 +1,15 @@
 using System.ComponentModel.DataAnnotations;
+using vizin.Models.Enum;
 
 namespace vizin.DTO.User;
+
 public class UserResponseDTO
 {
     public Guid Id {get;set;}
     public string Email {get;set;}
     public string Name {get;set;}
     public DateTime? CreatedAt {get;set;}
+    public int Type {get;set;}
 }
 
 public class CreateUserRequestDTO

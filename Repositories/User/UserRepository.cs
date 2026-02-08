@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using vizin.Models;
 using vizin.DTO.User;
@@ -14,12 +15,11 @@ public class UserRepository : IUserRepository
             _context = context;
         }
 
-    public List <TbUser> SelectAllUsers()
+    public async Task<TbUser?> SelectUserById(Guid id)
     {
-        return _context.TbUsers.ToList();
+        return await _context.TbUsers.FirstOrDefaultAsync(u => u.Id == id);
     }
-
-
+    
     public async Task<TbUser?> GetUserByEmailAsync(string email)
     {
         return await _context.TbUsers.FirstOrDefaultAsync(u => u.Email == email);
@@ -42,5 +42,11 @@ public class UserRepository : IUserRepository
     await _context.SaveChangesAsync();
 
     return newUser;
+    }
+
+    public async Task<TbUser?> HandleLogin(string email)
+    {
+        var user = await GetUserByEmailAsync(email);
+        return user;
     }
 }

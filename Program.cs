@@ -6,6 +6,7 @@ using vizin.Services.Property.Interfaces;
 using vizin.Repositories.User;
 using vizin.Services.User;
 using vizin.Services;
+using vizin.Services.User.Interface;
 
 
 var builder = WebApplication.CreateBuilder(args);

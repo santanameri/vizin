@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.User;
+using vizin.Services.User.Interface;
 
 namespace vizin.Controllers;
 
@@ -14,10 +15,10 @@ public class UserController : ControllerBase
         _service = service;
     }
 
-    [HttpGet(Name = "GetAllUsers")]
-    public List<UserResponseDTO> Get()
+    [HttpGet("{id:guid}", Name = "GetUser")]
+    public Task<UserResponseDTO> Get(Guid id)
     {
-        return _service.GetUsers();
+        return _service.GetUser(id);
     }
 
     [HttpPost(Name = "CreatUser")]

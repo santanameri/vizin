@@ -1,3 +1,5 @@
+namespace vizin.Models.Enum;
+
 public enum UserType
 {
     Anfitriao = 1,

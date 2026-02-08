@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,9 +19,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\User\" />
-    <Folder Include="DTO\User\Interfaces\" />
-    <Folder Include="Repositories\User\Interfaces\" />
-    <Folder Include="Services\User\Interfaces\" />
   </ItemGroup>
 
 </Project>
