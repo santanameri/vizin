@@ -22,6 +22,10 @@ public class CreateUserRequestDTO
     [Required(ErrorMessage = "Password é obrigatória")]
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Password deve ter no mínimo 6 caracteres")]
     public string Password { get; set; }
+
+    [Required(ErrorMessage = "O tipo de usuário é obrigatório")]
+    [Range(1, 2, ErrorMessage = "Tipo de usuário inválido. Use 1 para Anfitrião ou 2 para Hóspede")]
+    public UserType Type { get; set; }
 }
 
 
