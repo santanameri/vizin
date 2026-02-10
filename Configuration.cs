@@ -2,5 +2,6 @@ namespace vizin;
 
 public static class Configuration
 {
-    public static string PrivateKey { get; set; } = "JwtSettings:PrivateKey";
+    public static string PrivateKey { get; set; } =
+        "Essa_Eh_Uma_Chave_Muito_Longa_Com_Mais_De_32_Caracteres_Para_Testar_Vizin_2026";
 }

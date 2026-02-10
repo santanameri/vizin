@@ -4,7 +4,7 @@ using vizin.DTO.Property;
 using vizin.Services.Property.Interfaces;
 
 namespace vizin.Controllers.Property;
-//[Authorize]
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class PropertyController : ControllerBase
