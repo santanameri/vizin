@@ -4,5 +4,10 @@ namespace vizin.Services.Property.Interfaces;
 
 public interface IPropertyService
 {
-    public List<PropertyResponseDto> GetProperties();
+    Task<PropertyResponseDto> CreateProperty(
+        PropertyCreateDto dto,
+        Guid userId
+    );
+
+    List<PropertyResponseDto> GetProperties();
 }

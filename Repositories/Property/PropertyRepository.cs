@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace vizin.Repositories.Property;
 
 public class PropertyRepository : IPropertyRepository
 {
-    private PostgresContext _context;
+    private readonly PostgresContext _context;
 
     public PropertyRepository(PostgresContext context)
     {
@@ -21,7 +22,7 @@ public class PropertyRepository : IPropertyRepository
     }
     
     public List<TbProperty> SelectAllProperties()
-    {
-        return _context.TbProperties.ToList();
-    }  
+{
+    return _context.TbProperties.ToList();
+}
 }

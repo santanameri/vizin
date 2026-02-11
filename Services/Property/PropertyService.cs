@@ -1,3 +1,8 @@
+using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using vizin.Repositories.User;
 using vizin.DTO.Property;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
@@ -7,32 +12,83 @@ namespace vizin.Services.Property;
 
 public class PropertyService : IPropertyService
 {
-    private IPropertyRepository _repository;
+    private readonly IPropertyRepository _propertyRepository;
+    private readonly IUserRepository _userRepository;
 
-    public PropertyService(IPropertyRepository repository)
+
+    public PropertyService(
+        IPropertyRepository propertyRepository,
+        IUserRepository userRepository
+    )
     {
-        _repository = repository;
+        _propertyRepository = propertyRepository;
+        _userRepository = userRepository;
     }
+
 
     public List<PropertyResponseDto> GetProperties()
     {
-        List<TbProperty> properties = _repository.SelectAllProperties();
-        List<PropertyResponseDto> response = new List<PropertyResponseDto>();
-        foreach (TbProperty property in properties)
+        var properties = _propertyRepository.SelectAllProperties();
+        var response = new List<PropertyResponseDto>();
+
+        foreach (var property in properties)
         {
-            PropertyResponseDto responseDto = new PropertyResponseDto();
-            responseDto.Titulo = property.Title;
-            responseDto.Description = property.Description;
-            responseDto.FullAddress = property.FullAddress;
-            responseDto.IsAvailable = property.Availability;
-            responseDto.Capacity = property.Capacity;
-            responseDto.Diaria = (float)property.DailyValue;
-            responseDto.TipoDeAcomodacao = property.AccomodationType;
-            responseDto.Categoria = property.PropertyCategory;
-            
-            response.Add(responseDto);
+            response.Add(new PropertyResponseDto
+            {
+                Title = property.Title,
+                Description = property.Description,
+                FullAddress = property.FullAddress,
+                Availability = property.Availability,
+                DailyValue = (decimal)property.DailyValue,
+                Capacity = property.Capacity,
+                AccomodationType = property.AccomodationType,
+                PropertyCategory = property.PropertyCategory
+            });
         }
+
         return response;
-    } 
-    
+    }
+
+    public async Task<PropertyResponseDto> CreateProperty(
+    PropertyCreateDto dto,
+    Guid userId
+    )
+    {
+        TbUser? user = await _userRepository.SelectUserById(userId);
+
+        if (user == null)
+            throw new Exception("Usuário não encontrado");
+
+        if (user.Type != 1)
+            throw new Exception("Apenas usuários do tipo Anfitrião podem cadastrar imóveis");
+
+        TbProperty property = new TbProperty
+        {
+            Id = Guid.NewGuid(),
+            Title = dto.Title,
+            Description = dto.Description,
+            FullAddress = dto.FullAddress,
+            Availability = dto.Availability,
+            DailyValue = dto.DailyValue,
+            Capacity = dto.Capacity,
+            AccomodationType = dto.AccomodationType,
+            PropertyCategory = dto.PropertyCategory,
+            UserId = user.Id
+        };
+
+        TbProperty created = _propertyRepository.Create(property);
+
+        return new PropertyResponseDto
+        {
+            Id = created.Id,
+            Title = created.Title,
+            Description = created.Description,
+            FullAddress = created.FullAddress,
+            Availability = created.Availability, 
+            DailyValue = (decimal)created.DailyValue,
+            Capacity = created.Capacity,
+            AccomodationType = created.AccomodationType,
+            PropertyCategory = created.PropertyCategory
+        };
+    }
 }

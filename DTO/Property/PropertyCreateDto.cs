@@ -1,11 +1,29 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace vizin.DTO.Property;
 
 public class PropertyCreateDto
 {
-    public string Titulo { get; set; }
-    public string Descricao { get; set; }
-    public string Endereco { get; set; }
-    public bool? Disponivel { get; set; }
-    public float? Diaria { get; set; }
-    public int Capacidade { get; set; }
+    [Required]
+    [StringLength(100)]
+    public string Title { get; set; }
+
+    public string? Description { get; set; }
+
+    [Required]
+    public string FullAddress { get; set; }
+
+    public bool Availability { get; set; }
+
+    [Range(1, 100000)]
+    public decimal DailyValue { get; set; }
+
+    [Range(1, 50)]
+    public int Capacity { get; set; }
+
+    [Range(1, 3)]
+    public int AccomodationType { get; set; }
+
+    [Range(1, 4)]
+    public int PropertyCategory { get; set; }
 }

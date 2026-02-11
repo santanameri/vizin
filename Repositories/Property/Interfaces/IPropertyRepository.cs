@@ -5,6 +5,6 @@ namespace vizin.Repositories.Property.Interfaces;
 
 public interface IPropertyRepository
 {
-    public TbProperty Create(TbProperty property);
-    public List<TbProperty> SelectAllProperties();
+    TbProperty Create(TbProperty property);
+    List<TbProperty> SelectAllProperties();
 }

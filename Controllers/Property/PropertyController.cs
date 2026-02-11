@@ -1,3 +1,6 @@
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.Property;
@@ -16,9 +19,28 @@ public class PropertyController : ControllerBase
         _service = service;
     }
 
-    [HttpGet(Name = "GetAllProperty")]
+    [HttpGet]
     public List<PropertyResponseDto> GetAllProperty()
     {
-        return _service.GetProperties();
+    return _service.GetProperties();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(
+    [FromBody] PropertyCreateDto dto,
+    [FromHeader(Name = "user-id")] Guid userId
+    )
+    {
+        try
+        {
+            PropertyResponseDto result =
+                await _service.CreateProperty(dto, userId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
