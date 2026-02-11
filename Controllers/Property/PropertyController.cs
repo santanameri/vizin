@@ -25,14 +25,23 @@ public class PropertyController : ControllerBase
     return _service.GetProperties();
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(
-    [FromBody] PropertyCreateDto dto,
-    [FromHeader(Name = "user-id")] Guid userId
+    [FromBody] PropertyCreateDto dto
+    // [FromHeader(Name = "user-id")] Guid userId
     )
     {
+      
         try
         {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { message = "Usuário não identificado no token" });
+            }
+            
+            Guid userId = Guid.Parse(userIdClaim);
             PropertyResponseDto result =
                 await _service.CreateProperty(dto, userId);
 
