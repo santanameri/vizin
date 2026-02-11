@@ -14,7 +14,7 @@ public class PropertyCreateDto
     public string FullAddress { get; set; }
 
     public bool Availability { get; set; }
-
+    
     [Range(1, 100000)]
     public decimal DailyValue { get; set; }
 
