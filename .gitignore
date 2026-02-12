@@ -1,7 +1,9 @@
 ## Erros de compilação e pastas de saída
-bin/
-obj/
-/build/
+**/bin/
+**/obj/Debug/
+appsettings.Development.json
+coveragereport
+TestResults
 
 ## Visual Studio
 .vs/
@@ -26,7 +28,6 @@ obj/
 *.temp
 
 ## Configurações locais (Segurança)
-appsettings.Development.json
 appsettings.Local.json
 appsettings.json
 .env
