@@ -69,10 +69,10 @@ public class PropertyService : IPropertyService
             Description = dto.Description,
             FullAddress = dto.FullAddress,
             Availability = dto.Availability,
-            DailyValue = dto.DailyValue,
-            Capacity = dto.Capacity,
-            AccomodationType = dto.AccomodationType,
-            PropertyCategory = dto.PropertyCategory,
+            DailyValue = dto.DailyValue!.Value,
+            Capacity = dto.Capacity!.Value,
+            AccomodationType = dto.AccomodationType!.Value,
+            PropertyCategory = dto.PropertyCategory!.Value,
             UserId = user.Id
         };
 

@@ -25,17 +25,30 @@ public class UserController : ControllerBase
         return _service.GetUser(id);
     }
 
-    [HttpPost(Name = "CreatUser")]
+   [HttpPost(Name = "CreateUser")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequestDTO request)
     {
         try
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var createdUser = await _service.CreateUser(request);
-            return CreatedAtAction(nameof(Get), new{id = createdUser.Id}, createdUser);
-        } catch(InvalidOperationException ex)
+
+            string message = createdUser.Type == 1
+                ? "Usuário do tipo anfitrião cadastrado com sucesso"
+                : "Usuário do tipo hóspede cadastrado com sucesso";
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = createdUser.Id },
+                new
+                {
+                    message,
+                    data = createdUser
+                }
+            );
+    } catch(InvalidOperationException ex)
         {
            var problemDetails = new ProblemDetails
            {
