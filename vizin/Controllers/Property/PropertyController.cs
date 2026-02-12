@@ -36,7 +36,7 @@ public class PropertyController : ControllerBase
             PropertyResponseDto result =
                 await _service.CreateProperty(dto, userId);
 
-            return Ok(result);
+            return Ok(new {result, message = "O imóvel foi cadastrado com sucesso."});
         }
         catch (Exception ex)
         {
