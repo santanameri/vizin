@@ -10,7 +10,11 @@ TestResults
 *.user
 *.userosscache
 *.sln.docstates
-.idea
+
+[Ob]j/
+[Bb]in/
+.idea/
+
 ## VS Code
 .vscode/
 !.vscode/settings.json
