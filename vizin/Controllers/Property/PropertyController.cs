@@ -43,4 +43,44 @@ public class PropertyController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPatch("{propertyId}/daily-value")]
+    public async Task<IActionResult> UpdateDailyValue(
+        Guid propertyId,
+        [FromBody] PropertyUpdateDailyValueDto dto,
+        [FromHeader(Name = "user-id")] Guid userId
+    )
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var updated =
+                await _service.UpdateDailyValueAsync(propertyId, userId, dto);
+            
+            Console.WriteLine("chamou o service");
+            return Ok(new
+            {
+                message = "Valor da diária atualizada com sucesso.",
+                data = updated
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
 }

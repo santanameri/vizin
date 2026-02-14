@@ -84,11 +84,53 @@ public class PropertyService : IPropertyService
             Title = created.Title,
             Description = created.Description,
             FullAddress = created.FullAddress,
-            Availability = created.Availability, 
+            Availability = created.Availability,
             DailyValue = (decimal)created.DailyValue,
             Capacity = created.Capacity,
             AccomodationType = created.AccomodationType,
             PropertyCategory = created.PropertyCategory
         };
     }
+
+    public async Task<PropertyResponseDto> UpdateDailyValueAsync(
+        Guid propertyId,
+        Guid userId,
+        PropertyUpdateDailyValueDto dto
+    )
+    {
+        Console.WriteLine($"propertyId recebido: {propertyId}");
+        Console.WriteLine($"userId recebido: {userId}");
+        Console.WriteLine($"dailyValue recebido: {dto.DailyValue}");
+
+        var property = await _propertyRepository.GetByIdAsync(propertyId);
+
+        if (property == null)
+            throw new KeyNotFoundException("Propriedade não encontrada");
+
+        Console.WriteLine($"property.UserId: {property.UserId}");
+
+        if (property.UserId != userId)
+            throw new UnauthorizedAccessException("Você não é o proprietário deste imóvel.");
+
+        if (dto.DailyValue == null || dto.DailyValue <= 0)
+            throw new ArgumentException("O valor diário deve ser maior que zero.");
+
+        property.DailyValue = dto.DailyValue.Value;
+
+        await _propertyRepository.UpdateAsync(property);
+
+        return new PropertyResponseDto
+        {
+            Id = property.Id,
+            Title = property.Title,
+            Description = property.Description,
+            FullAddress = property.FullAddress,
+            Availability = property.Availability,
+            DailyValue = property.DailyValue,
+            Capacity = property.Capacity,
+            AccomodationType = property.AccomodationType,
+            PropertyCategory = property.PropertyCategory
+        };
+    }
+
 }

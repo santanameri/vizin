@@ -22,7 +22,26 @@ public class PropertyRepository : IPropertyRepository
     }
     
     public List<TbProperty> SelectAllProperties()
-{
-    return _context.TbProperties.ToList();
-}
+    {
+        return _context.TbProperties.ToList();
+    }
+
+    public async Task<TbProperty?> SelectByIdAsync(Guid propertyId)
+    {
+        return await _context.TbProperties
+            .FirstOrDefaultAsync(p => p.Id == propertyId);
+    }
+
+    public async Task UpdateAsync(TbProperty property)
+    {
+        _context.TbProperties.Update(property);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<TbProperty?> GetByIdAsync(Guid propertyId)
+    {
+        return await _context.TbProperties
+           .FirstOrDefaultAsync(p => p.Id == propertyId);
+    }
+
 }

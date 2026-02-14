@@ -10,4 +10,10 @@ public interface IPropertyService
     );
 
     List<PropertyResponseDto> GetProperties();
+
+    Task<PropertyResponseDto> UpdateDailyValueAsync(
+        Guid propertyId,
+        Guid userId,
+        PropertyUpdateDailyValueDto dto
+    );
 }
