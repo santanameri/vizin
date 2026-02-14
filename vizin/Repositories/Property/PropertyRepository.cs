@@ -21,8 +21,32 @@ public class PropertyRepository : IPropertyRepository
         return property;
     }
     
-    public List<TbProperty> SelectAllProperties()
-{
-    return _context.TbProperties.ToList();
-}
+    public async Task<List<TbProperty>> SelectAllProperties()
+    {
+        return await _context.TbProperties.ToListAsync();
+    }
+    
+    public async Task<List<TbProperty>> SelectAllPropertiesByHost(Guid hostId)
+    {
+        
+        return await _context.TbProperties.Where(p => p.UserId == hostId).ToListAsync();
+    }
+
+    public async Task<TbProperty?> GetPropertyById(Guid propertyId)
+    {
+        return await _context.TbProperties.FirstOrDefaultAsync(p => p.Id == propertyId);
+    }
+
+    public async Task<TbProperty?> Update(Guid propertyId, TbProperty property)
+    {
+        var existingProperty = await GetPropertyById(propertyId);
+        
+        if (existingProperty == null)
+            return null;
+        
+        _context.Entry(existingProperty).CurrentValues.SetValues(property);
+        await _context.SaveChangesAsync();
+        
+        return existingProperty;
+    }
 }
