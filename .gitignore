@@ -11,8 +11,8 @@ TestResults
 *.userosscache
 *.sln.docstates
 
-[Ob]j/
-[Bb]in/
+obj/
+bin/
 .idea/
 
 ## VS Code
