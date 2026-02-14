@@ -39,7 +39,7 @@ public class PropertyController : ControllerBase
     [HttpPut("{propertyId:guid}")]
     public async Task<IActionResult> UpdateProperty([FromBody] PropertyResponseDto dto, [FromRoute] Guid propertyId)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
        
         if (string.IsNullOrEmpty(userIdClaim))
         {

@@ -84,7 +84,10 @@ public class PropertyService : IPropertyService
 
         if (user == null)
             throw new Exception("Usuário não encontrado");
-
+        
+        if (user.Type != 1)
+            throw new Exception("Apenas usuários do tipo Anfitrião podem cadastrar imóveis");
+        
         TbProperty property = new TbProperty
         {
             Id = Guid.NewGuid(),

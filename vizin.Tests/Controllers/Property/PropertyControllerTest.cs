@@ -31,6 +31,90 @@ public class PropertyControllerTests
             HttpContext = new DefaultHttpContext() { User = user }
         };
     }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnOk_WhenSuccessful()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto
+        {
+            Title = "Novo título",
+            DailyValue = 200
+        };
+
+        var expectedResponse = new PropertyResponseDto
+        {
+            Title = "Novo título",
+            DailyValue = 200
+        };
+
+        _serviceMock
+            .Setup(s => s.UpdateProperty(dto, _userId, propertyId))
+            .ReturnsAsync(expectedResponse);
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var ok = result as OkObjectResult;
+        Assert.That(ok!.Value, Is.EqualTo(expectedResponse));
+
+        _serviceMock.Verify(
+            s => s.UpdateProperty(dto, _userId, propertyId),
+            Times.Once);
+    }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnBadRequest_WhenExceptionOccurs()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto
+        {
+            Title = "Teste",
+            DailyValue = 0
+        };
+
+        const string errorMessage = "Erro ao atualizar";
+
+        _serviceMock
+            .Setup(s => s.UpdateProperty(dto, _userId, propertyId))
+            .ThrowsAsync(new Exception(errorMessage));
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
+
+        var badRequest = result as BadRequestObjectResult;
+
+        Assert.That(badRequest!.Value!.ToString(),
+            Does.Contain(errorMessage));
+    }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnUnauthorized_WhenUserIdClaimIsMissing()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto();
+
+        // Remove o usuário do contexto
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<UnauthorizedResult>());
+    }
 
     [Test]
     public async Task GetAllProperty_ShouldReturnOk_WithPropertyList()
