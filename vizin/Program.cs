@@ -30,6 +30,29 @@ builder.Services.AddAuthentication(x =>
             ValidateIssuer = false, // Você pode colocar o nome da sua API aqui depois
             ValidateAudience = false
         };
+        
+        x.Events = new JwtBearerEvents
+        {
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json; charset=utf-8";
+                return context.Response.WriteAsync(
+                    "{\"error\":\"forbidden\",\"message\":\"Você não tem permissão para acessar este recurso.\"}",
+                    Encoding.UTF8);
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json; charset=utf-8";
+
+                return context.Response.WriteAsync(
+                    "{\"error\":\"unauthorized\",\"message\":\"Você precisa estar logado.\"}",
+                    Encoding.UTF8
+                );
+            }
+        };
     });
 
 
@@ -43,6 +66,11 @@ builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddAuthorization((options =>
+{
+    options.AddPolicy("HospedeOnly", policy => policy.RequireRole("Hospede"));
+    options.AddPolicy("AnfitriaoOnly", policy => policy.RequireRole("Anfitriao"));
+}));
 
 var app = builder.Build();
 

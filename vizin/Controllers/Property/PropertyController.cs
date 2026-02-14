@@ -17,7 +17,7 @@ public class PropertyController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Roles = "Hospede")]
+    [Authorize(Policy = "HospedeOnly")]
     [HttpGet]
     public async Task<IActionResult> GetAllProperty()
     {
@@ -25,7 +25,7 @@ public class PropertyController : ControllerBase
         return Ok(properties);
     }
     
-    [Authorize(Roles = "Anfitriao")]
+    [Authorize(Policy = "AnfitriaoOnly")]
     [HttpGet("my")]
     public async Task<IActionResult> GetAllPropertyByHost()
     {
@@ -35,7 +35,7 @@ public class PropertyController : ControllerBase
         return Ok(properties);
     }
 
-    [Authorize(Roles = "Anfitriao")]
+    [Authorize(Policy = "AnfitriaoOnly")]
     [HttpPut("{propertyId:guid}")]
     public async Task<IActionResult> UpdateProperty([FromBody] PropertyResponseDto dto, [FromRoute] Guid propertyId)
     {
@@ -58,7 +58,7 @@ public class PropertyController : ControllerBase
         }
     }
     
-    [Authorize(Roles = "Anfitriao")]
+    [Authorize(Policy= "AnfitriaoOnly")]
     [HttpPost]
     public async Task<IActionResult> Create(
     [FromBody] PropertyCreateDto dto
