@@ -200,4 +200,110 @@ public class PropertyServiceTests
             _propertyRepoMock.Verify(r => r.Create(It.IsAny<TbProperty>()), Times.Once);
         });
     }
+    
+    [Test]
+    public async Task AddAmenitiesAsync_ShouldAddAmenity_WhenValid()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+
+        var amenity = new TbAmenity { Id = amenityId, Name = "WiFi" };
+
+        var property = new TbProperty
+        {
+            Id = propertyId,
+            Amenities = new List<TbAmenity>()
+        };
+        
+        _propertyRepoMock
+            .Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        _propertyRepoMock
+            .Setup(r => r.GetAmenityById(amenityId))
+            .ReturnsAsync(amenity);
+
+        _propertyRepoMock
+            .Setup(r => r.AddAmenityAsync(amenityId, propertyId))
+            .Callback(() => property.Amenities.Add(amenity)) // simula banco
+            .ReturnsAsync(property);
+        
+        var result = await _service.AddAmenitiesAsync(amenityId, propertyId);
+        
+        Assert.That(result.Amenities.Count, Is.EqualTo(1));
+        _propertyRepoMock.Verify(
+            r => r.AddAmenityAsync(amenityId, propertyId),
+            Times.Once);
+    }
+    
+    [Test]
+    public void AddAmenitiesAsync_ShouldThrow_WhenPropertyNotFound()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+
+        _propertyRepoMock
+            .Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync((TbProperty?)null);
+
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Imóvel não encontrado"));
+    }
+
+    [Test]
+    public void AddAmenitiesAsync_ShouldThrow_WhenAmenityNotFound()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+
+        var property = new TbProperty
+        {
+            Id = propertyId,
+            Amenities = new List<TbAmenity>()
+        };
+
+        _propertyRepoMock
+            .Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        _propertyRepoMock
+            .Setup(r => r.GetAmenityById(amenityId))
+            .ReturnsAsync((TbAmenity?)null);
+
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Comodidade não encontrada"));
+    }
+
+    [Test]
+    public void AddAmenitiesAsync_ShouldThrow_WhenAmenityAlreadyExists()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+
+        var amenity = new TbAmenity { Id = amenityId, Name = "WiFi" };
+
+        var property = new TbProperty
+        {
+            Id = propertyId,
+            Amenities = new List<TbAmenity> { amenity }
+        };
+
+        _propertyRepoMock
+            .Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        _propertyRepoMock
+            .Setup(r => r.GetAmenityById(amenityId))
+            .ReturnsAsync(amenity);
+
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Essa comodidade já está cadastrada."));
+    }
+
 }

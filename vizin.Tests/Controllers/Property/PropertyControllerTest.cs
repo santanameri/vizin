@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using vizin.Controllers.Property;
 using vizin.Services.Property.Interfaces;
 using vizin.DTO.Property;
+using vizin.DTO.Property.Amenity;
 
 namespace vizin.Tests.Controllers;
 
@@ -163,4 +164,40 @@ public class PropertyControllerTests
         var badRequest = result as BadRequestObjectResult;
         Assert.That(badRequest!.Value!.ToString(), Does.Contain(errorMessage));
     }
+    
+    [Test]
+    public async Task CreateAmenity_ShouldReturnOk_WhenValid()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        var userId = _userId;
+        
+        var dto = new AddAmenityDto { AmenityId = amenityId };
+
+        _serviceMock
+            .Setup(s => s.AddAmenitiesAsync(amenityId, propertyId))
+            .ReturnsAsync(new PropertyResponseDto());
+
+        var result = await _controller.CreateAmenity(propertyId, dto);
+
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
+
+        _serviceMock.Verify(
+            s => s.AddAmenitiesAsync(amenityId, propertyId),
+            Times.Once);
+    }
+    
+    [Test]
+    public async Task AddAmenity_ShouldReturnUnauthorized_WhenUserMissing()
+    {
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext() // sem user
+        };
+
+        var result = await _controller.CreateAmenity(Guid.NewGuid(), new AddAmenityDto());
+
+        Assert.That(result, Is.InstanceOf<UnauthorizedResult>());
+    }
+
 }

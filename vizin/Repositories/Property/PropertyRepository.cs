@@ -55,4 +55,35 @@ public class PropertyRepository : IPropertyRepository
         _context.TbProperties.Update(property);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<TbAmenity>> SelectAllAmenity()
+    {
+        return await _context.TbAmenities.ToListAsync();
+    }
+
+    public async Task<TbAmenity?> GetAmenityById(Guid amenityId)
+    {
+        return await _context.TbAmenities.FirstOrDefaultAsync(a => a.Id == amenityId);
+    }
+
+    public async Task<TbProperty?> AddAmenityAsync(Guid amenityId, Guid propertyId)
+    {
+        var property = await _context.TbProperties
+            .Include(p => p.Amenities)
+            .FirstOrDefaultAsync(p => p.Id == propertyId);
+
+        var amenity = await _context.TbAmenities
+            .FirstOrDefaultAsync(a => a.Id == amenityId);
+
+        if (property == null || amenity == null)
+            return null;
+
+        if (!property.Amenities.Any(a => a.Id == amenityId))
+            property.Amenities.Add(amenity);
+
+        await _context.SaveChangesAsync();
+        
+        return property;
+    }
+
 }

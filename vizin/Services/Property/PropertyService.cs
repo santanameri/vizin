@@ -5,6 +5,7 @@ using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Http.HttpResults;
 using vizin.Repositories.User;
 using vizin.DTO.Property;
+using vizin.DTO.Property.Amenity;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
 using vizin.Services.Property.Interfaces;
@@ -43,7 +44,12 @@ public class PropertyService : IPropertyService
                 DailyValue = (decimal)property.DailyValue,
                 Capacity = property.Capacity,
                 AccomodationType = property.AccomodationType,
-                PropertyCategory = property.PropertyCategory
+                PropertyCategory = property.PropertyCategory,
+                Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                }).ToList()
             });
         }
 
@@ -71,7 +77,12 @@ public class PropertyService : IPropertyService
                 DailyValue = (decimal)property.DailyValue,
                 Capacity = property.Capacity,
                 AccomodationType = property.AccomodationType,
-                PropertyCategory = property.PropertyCategory
+                PropertyCategory = property.PropertyCategory,
+                Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                }).ToList()
             });
         }
 
@@ -113,7 +124,12 @@ public class PropertyService : IPropertyService
             DailyValue = (decimal)created.DailyValue,
             Capacity = created.Capacity,
             AccomodationType = created.AccomodationType,
-            PropertyCategory = created.PropertyCategory
+            PropertyCategory = created.PropertyCategory,
+            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+            {
+                Id = a.Id,
+                Name = a.Name,
+            }).ToList()
         };
     }
 
@@ -163,7 +179,12 @@ public class PropertyService : IPropertyService
             DailyValue = result.DailyValue,
             Capacity = result.Capacity,
             AccomodationType = result.AccomodationType,
-            PropertyCategory = result.PropertyCategory
+            PropertyCategory = result.PropertyCategory,
+            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+            {
+                Id = a.Id,
+                Name = a.Name,
+            }).ToList()
         };
     }
     
@@ -193,8 +214,55 @@ public class PropertyService : IPropertyService
             DailyValue = property.DailyValue,
             Capacity = property.Capacity,
             AccomodationType = property.AccomodationType,
-            PropertyCategory = property.PropertyCategory
+            PropertyCategory = property.PropertyCategory,
+            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+            {
+                Id = a.Id,
+                Name = a.Name,
+            }).ToList()
         };
     }
 
+    public async Task<PropertyResponseDto> AddAmenitiesAsync(Guid amenityId, Guid propertyId)
+    { 
+      var property = await _propertyRepository.GetPropertyById(propertyId);
+      if (property == null)
+          throw new Exception("Imóvel não encontrado");
+      
+      var amenity = await _propertyRepository.GetAmenityById(amenityId);
+      if (amenity == null)
+          throw new Exception("Comodidade não encontrada");
+
+      if (property.Amenities.Any(a => a.Id == amenityId))
+          throw new Exception("Essa comodidade já está cadastrada.");
+      
+      await _propertyRepository.AddAmenityAsync(amenityId, propertyId);
+
+      return new PropertyResponseDto()
+      {
+          Title = property.Title,
+          Description = property.Description,
+          FullAddress = property.FullAddress,
+          Availability = property.Availability,
+          DailyValue = property.DailyValue,
+          Capacity = property.Capacity,
+          AccomodationType = property.AccomodationType,
+          PropertyCategory = property.PropertyCategory,
+          Amenities = property.Amenities.Select(a => new AmenityResponseDto()
+          {
+              Id = a.Id,
+              Name = a.Name,
+          }).ToList()
+      };
+    }
+
+    public async Task<List<AmenityResponseDto>> GetAllAmenities()
+    {
+        var result = await _propertyRepository.SelectAllAmenity();
+        return result.Select(a => new AmenityResponseDto
+        {
+            Id = a.Id,
+            Name = a.Name,
+        }).ToList();
+    }
 }

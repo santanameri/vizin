@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.Property;
+using vizin.DTO.Property.Amenity;
 using vizin.Services.Property.Interfaces;
 
 namespace vizin.Controllers.Property;
@@ -107,6 +108,43 @@ public class PropertyController : ControllerBase
                 await _service.CreateProperty(dto, userId);
 
             return Ok(new {result, message = "O imóvel foi cadastrado com sucesso."});
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpPost("add-amenity/{propertyId:guid}")]
+    public async Task<IActionResult> CreateAmenity([FromRoute] Guid propertyId, [FromBody] AddAmenityDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        try
+        {
+            var result = await _service.AddAmenitiesAsync(dto.AmenityId, propertyId);
+            return Ok(new { result, message = "Comodidade adicionada com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpGet("amenities")]
+    public async Task<IActionResult> GetAllAmenities()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+        try
+        {
+            var result = await _service.GetAllAmenities();
+            return Ok(result);
         }
         catch (Exception ex)
         {
