@@ -49,4 +49,10 @@ public class PropertyRepository : IPropertyRepository
         
         return existingProperty;
     }
+    
+    public async Task PatchAsync(TbProperty property)
+    {
+        _context.TbProperties.Update(property);
+        await _context.SaveChangesAsync();
+    }
 }

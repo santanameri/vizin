@@ -58,6 +58,41 @@ public class PropertyController : ControllerBase
         }
     }
     
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpPatch("{propertyId:guid}")]
+    public async Task<IActionResult> UpdateDailyValue(Guid propertyId, [FromBody] PropertyUpdateDailyValueDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+
+            var updated = await _service.UpdateDailyValueAsync(
+                propertyId,
+                userId,
+                dto
+            );
+
+            return Ok(new
+            {
+                message = "Valor da diária atualizado com sucesso.",
+                data = updated
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+    
     [Authorize(Policy= "AnfitriaoOnly")]
     [HttpPost]
     public async Task<IActionResult> Create(

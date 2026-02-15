@@ -8,4 +8,5 @@ public interface IPropertyService
     Task<List<PropertyResponseDto>> GetProperties();
     Task<List<PropertyResponseDto>> GetPropertiesByHost(Guid userId);
     Task<PropertyResponseDto> UpdateProperty(PropertyResponseDto dto, Guid userId, Guid propertyId);
+    Task<PropertyResponseDto> UpdateDailyValueAsync(Guid propertyId, Guid userId, PropertyUpdateDailyValueDto dto);
 }

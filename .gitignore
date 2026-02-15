@@ -1,5 +1,6 @@
 ## Erros de compilação e pastas de saída
 **/bin/
+**/obj/
 **/obj/Debug/
 appsettings.Development.json
 coveragereport

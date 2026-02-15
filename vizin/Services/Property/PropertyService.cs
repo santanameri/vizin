@@ -166,4 +166,35 @@ public class PropertyService : IPropertyService
             PropertyCategory = result.PropertyCategory
         };
     }
+    
+    public async Task<PropertyResponseDto> UpdateDailyValueAsync(Guid propertyId, Guid userId, PropertyUpdateDailyValueDto dto)
+    {
+        var property  = await _propertyRepository.GetPropertyById(propertyId);
+
+        if (property == null)
+            throw new KeyNotFoundException("Propriedade não encontrada");
+        
+        if (property.UserId != userId)
+            throw new UnauthorizedAccessException("Você não é o proprietário deste imóvel.");
+
+        if (dto.DailyValue <= 0)
+            throw new ArgumentException("O valor da diária deve ser maior que zero.");
+
+        property.DailyValue = dto.DailyValue!.Value;
+
+        await _propertyRepository.PatchAsync(property);
+
+        return new PropertyResponseDto
+        {
+            Title = property.Title,
+            Description = property.Description,
+            FullAddress = property.FullAddress,
+            Availability = property.Availability,
+            DailyValue = property.DailyValue,
+            Capacity = property.Capacity,
+            AccomodationType = property.AccomodationType,
+            PropertyCategory = property.PropertyCategory
+        };
+    }
+
 }
