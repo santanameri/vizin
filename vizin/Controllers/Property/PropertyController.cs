@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.Property;
 using vizin.Services.Property.Interfaces;
+using System.Security.Claims;
 
 namespace vizin.Controllers.Property;
 //[Authorize]
@@ -25,18 +26,25 @@ public class PropertyController : ControllerBase
     return _service.GetProperties();
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(
-    [FromBody] PropertyCreateDto dto,
-    [FromHeader(Name = "user-id")] Guid userId
+        [FromBody] PropertyCreateDto dto
     )
     {
         try
         {
-            PropertyResponseDto result =
-                await _service.CreateProperty(dto, userId);
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value
+            );
 
-            return Ok(new {result, message = "O imóvel foi cadastrado com sucesso."});
+            var result = await _service.CreateProperty(dto, userId);
+
+            return Ok(new
+            {
+                result,
+                message = "O imóvel foi cadastrado com sucesso."
+            });
         }
         catch (Exception ex)
         {
@@ -44,43 +52,48 @@ public class PropertyController : ControllerBase
         }
     }
 
+
+    [Authorize]
     [HttpPatch("{propertyId}/daily-value")]
     public async Task<IActionResult> UpdateDailyValue(
         Guid propertyId,
-        [FromBody] PropertyUpdateDailyValueDto dto,
-        [FromHeader(Name = "user-id")] Guid userId
+        [FromBody] PropertyUpdateDailyValueDto dto
     )
     {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            var updated =
-                await _service.UpdateDailyValueAsync(propertyId, userId, dto);
-            
-            Console.WriteLine("chamou o service");
+            var userId = Guid.Parse(userIdClaim);
+
+            var updated = await _service.UpdateDailyValueAsync(
+                propertyId,
+                userId,
+                dto
+            );
+
             return Ok(new
             {
-                message = "Valor da diária atualizada com sucesso.",
+                message = "Valor da diária atualizado com sucesso.",
                 data = updated
             });
         }
         catch (UnauthorizedAccessException ex)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new
-            {
-                message = ex.Message
-            });
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
 }

@@ -44,4 +44,10 @@ public class PropertyRepository : IPropertyRepository
            .FirstOrDefaultAsync(p => p.Id == propertyId);
     }
 
+    //colei aqui embaixo
+    public async Task<TbProperty?> GetPropertyById(Guid propertyId)
+    {
+        return await _context.TbProperties.FirstOrDefaultAsync(p => p.Id == propertyId);
+    }
+
 }

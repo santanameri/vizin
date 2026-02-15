@@ -10,4 +10,7 @@ public interface IPropertyRepository
     Task<TbProperty?> SelectByIdAsync(Guid propertyId);
     Task UpdateAsync(TbProperty property);
     Task<TbProperty?> GetByIdAsync(Guid propertyId);
+
+    //colei embaixo
+    Task<TbProperty?> GetPropertyById(Guid propertyId);
 }

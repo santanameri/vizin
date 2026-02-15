@@ -54,7 +54,11 @@ public class PropertyService : IPropertyService
     Guid userId
     )
     {
+        //Console.WriteLine($"userId: {userId}");
+
         TbUser? user = await _userRepository.SelectUserById(userId);
+
+       //Console.WriteLine($"user: {user}");
 
         if (user == null)
             throw new Exception("Usuário não encontrado");
@@ -73,7 +77,7 @@ public class PropertyService : IPropertyService
             Capacity = dto.Capacity!.Value,
             AccomodationType = dto.AccomodationType!.Value,
             PropertyCategory = dto.PropertyCategory!.Value,
-            UserId = user.Id
+            UserId = userId
         };
 
         TbProperty created = _propertyRepository.Create(property);
@@ -98,24 +102,24 @@ public class PropertyService : IPropertyService
         PropertyUpdateDailyValueDto dto
     )
     {
-        Console.WriteLine($"propertyId recebido: {propertyId}");
-        Console.WriteLine($"userId recebido: {userId}");
-        Console.WriteLine($"dailyValue recebido: {dto.DailyValue}");
+        //var property = await _propertyRepository.GetByIdAsync(propertyId);
 
-        var property = await _propertyRepository.GetByIdAsync(propertyId);
+        var property  = await _propertyRepository.GetPropertyById(propertyId);
 
         if (property == null)
             throw new KeyNotFoundException("Propriedade não encontrada");
+        
+        //Console.WriteLine($"property user id, {property.UserId}");
+        //Console.WriteLine($"user id, {userId}");
 
-        Console.WriteLine($"property.UserId: {property.UserId}");
-
+        // 🔒 REGRA DE NEGÓCIO PRINCIPAL
         if (property.UserId != userId)
             throw new UnauthorizedAccessException("Você não é o proprietário deste imóvel.");
 
-        if (dto.DailyValue == null || dto.DailyValue <= 0)
-            throw new ArgumentException("O valor diário deve ser maior que zero.");
+        if (dto.DailyValue <= 0)
+            throw new ArgumentException("O valor da diária deve ser maior que zero.");
 
-        property.DailyValue = dto.DailyValue.Value;
+        property.DailyValue = dto.DailyValue!.Value;
 
         await _propertyRepository.UpdateAsync(property);
 
@@ -132,5 +136,6 @@ public class PropertyService : IPropertyService
             PropertyCategory = property.PropertyCategory
         };
     }
+
 
 }
