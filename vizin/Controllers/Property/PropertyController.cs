@@ -1,64 +1,66 @@
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using vizin.DTO.Property;
 using vizin.Services.Property.Interfaces;
-using System.Security.Claims;
 
 namespace vizin.Controllers.Property;
-//[Authorize]
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class PropertyController : ControllerBase
 {
-    private IPropertyService _service;
+    private readonly IPropertyService _service;
 
     public PropertyController(IPropertyService service)
     {
         _service = service;
     }
 
+    [Authorize(Policy = "HospedeOnly")]
     [HttpGet]
-    public List<PropertyResponseDto> GetAllProperty()
+    public async Task<IActionResult> GetAllProperty()
     {
-    return _service.GetProperties();
+        var properties = await _service.GetProperties();
+        return Ok(properties);
+    }
+    
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpGet("my")]
+    public async Task<IActionResult> GetAllPropertyByHost()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        var userId = Guid.Parse(userIdClaim);
+        var properties = await _service.GetPropertiesByHost(userId);
+        return Ok(properties);
     }
 
-    [Authorize]
-    [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] PropertyCreateDto dto
-    )
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpPut("{propertyId:guid}")]
+    public async Task<IActionResult> UpdateProperty([FromBody] PropertyResponseDto dto, [FromRoute] Guid propertyId)
     {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+       
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Unauthorized();
+        }
+        
         try
         {
-            var userId = Guid.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value
-            );
-
-            var result = await _service.CreateProperty(dto, userId);
-
-            return Ok(new
-            {
-                result,
-                message = "O imóvel foi cadastrado com sucesso."
-            });
+            var userId = Guid.Parse(userIdClaim);
+            var result = await _service.UpdateProperty(dto, userId, propertyId);
+            return Ok(result);
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
-
-
-    [Authorize]
-    [HttpPatch("{propertyId}/daily-value")]
-    public async Task<IActionResult> UpdateDailyValue(
-        Guid propertyId,
-        [FromBody] PropertyUpdateDailyValueDto dto
-    )
+    
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpPatch("{propertyId:guid}")]
+    public async Task<IActionResult> UpdateDailyValue(Guid propertyId, [FromBody] PropertyUpdateDailyValueDto dto)
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
@@ -81,10 +83,6 @@ public class PropertyController : ControllerBase
                 data = updated
             });
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
@@ -94,6 +92,25 @@ public class PropertyController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    
+    [Authorize(Policy= "AnfitriaoOnly")]
+    [HttpPost]
+    public async Task<IActionResult> Create(
+    [FromBody] PropertyCreateDto dto
+    )
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        try
+        {
+            var userId = Guid.Parse(userIdClaim);
+            PropertyResponseDto result =
+                await _service.CreateProperty(dto, userId);
 
-
+            return Ok(new {result, message = "O imóvel foi cadastrado com sucesso."});
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

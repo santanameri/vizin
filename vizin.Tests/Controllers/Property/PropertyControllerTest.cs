@@ -1,5 +1,6 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Moq;
-using NUnit.Framework;
 using Microsoft.AspNetCore.Mvc;
 using vizin.Controllers.Property;
 using vizin.Services.Property.Interfaces;
@@ -12,71 +13,154 @@ public class PropertyControllerTests
 {
     private Mock<IPropertyService> _serviceMock;
     private PropertyController _controller;
+    private Guid _userId;
 
     [SetUp]
     public void Setup()
     {
-        // Inicializa o Mock da Interface
         _serviceMock = new Mock<IPropertyService>();
-        
-        // Instancia a Controller passando o Mock
         _controller = new PropertyController(_serviceMock.Object);
+        _userId = Guid.NewGuid();
+        
+        var user = new ClaimsPrincipal(new  ClaimsIdentity(new Claim[]
+        {
+            new  Claim(ClaimTypes.NameIdentifier, _userId.ToString()),
+        }, "mock"));
+        _controller.ControllerContext = new ControllerContext()
+        {
+            HttpContext = new DefaultHttpContext() { User = user }
+        };
+    }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnOk_WhenSuccessful()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto
+        {
+            Title = "Novo título",
+            DailyValue = 200
+        };
+
+        var expectedResponse = new PropertyResponseDto
+        {
+            Title = "Novo título",
+            DailyValue = 200
+        };
+
+        _serviceMock
+            .Setup(s => s.UpdateProperty(dto, _userId, propertyId))
+            .ReturnsAsync(expectedResponse);
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var ok = result as OkObjectResult;
+        Assert.That(ok!.Value, Is.EqualTo(expectedResponse));
+
+        _serviceMock.Verify(
+            s => s.UpdateProperty(dto, _userId, propertyId),
+            Times.Once);
+    }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnBadRequest_WhenExceptionOccurs()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto
+        {
+            Title = "Teste",
+            DailyValue = 0
+        };
+
+        const string errorMessage = "Erro ao atualizar";
+
+        _serviceMock
+            .Setup(s => s.UpdateProperty(dto, _userId, propertyId))
+            .ThrowsAsync(new Exception(errorMessage));
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
+
+        var badRequest = result as BadRequestObjectResult;
+
+        Assert.That(badRequest!.Value!.ToString(),
+            Does.Contain(errorMessage));
+    }
+    
+    [Test]
+    public async Task UpdateProperty_ShouldReturnUnauthorized_WhenUserIdClaimIsMissing()
+    {
+        // ARRANGE
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyResponseDto();
+
+        // Remove o usuário do contexto
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+
+        // ACT
+        var result = await _controller.UpdateProperty(dto, propertyId);
+
+        // ASSERT
+        Assert.That(result, Is.TypeOf<UnauthorizedResult>());
     }
 
     [Test]
-    public void GetAllProperty_ShouldReturnPropertyList()
+    public async Task GetAllProperty_ShouldReturnOk_WithPropertyList()
     {
-        // Arrange 
         var mockList = new List<PropertyResponseDto> { new PropertyResponseDto() };
-        _serviceMock.Setup(s => s.GetProperties()).Returns(mockList);
+        _serviceMock.Setup(s => s.GetProperties()).ReturnsAsync(mockList);
+        
+        var result = await _controller.GetAllProperty();
 
-        // Act 
-        var result = _controller.GetAllProperty();
-
-        // Assert 
-        Assert.That(result, Is.EqualTo(mockList));
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+        
+        var ok = result as OkObjectResult;
+        Assert.That(ok.Value, Is.EqualTo(mockList));
         _serviceMock.Verify(s => s.GetProperties(), Times.Once);
     }
 
     [Test]
     public async Task Create_ShouldReturnOk_WhenSuccessful()
     {
-        // Arrange
         var dto = new PropertyCreateDto();
-        var userId = Guid.NewGuid();
         var responseDto = new PropertyResponseDto();
 
-        _serviceMock.Setup(s => s.CreateProperty(dto, userId))
+        _serviceMock.Setup(s => s.CreateProperty(dto, _userId))
                     .ReturnsAsync(responseDto);
-
-        // Act
-        var result = await _controller.Create(dto, userId);
-
-        // Assert
+        
+        var result = await _controller.Create(dto);
+        
         Assert.That(result, Is.TypeOf<OkObjectResult>());
-        var okResult = result as OkObjectResult;
-        Assert.That(okResult.Value, Is.EqualTo(responseDto));
+        var ok = result as OkObjectResult;
+        Assert.That(ok.Value!.ToString(), Does.Contain("O imóvel foi cadastrado com sucesso."));
     }
 
     [Test]
     public async Task Create_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
-        // Arrange
         var dto = new PropertyCreateDto();
-        var userId = Guid.NewGuid();
-        var errorMessage = "Erro ao criar propriedade";
+        const string errorMessage = "Erro ao criar propriedade";
 
-        _serviceMock.Setup(s => s.CreateProperty(dto, userId))
+        _serviceMock.Setup(s => s.CreateProperty(dto, _userId))
                     .ThrowsAsync(new Exception(errorMessage));
-
-        // Act
-        var result = await _controller.Create(dto, userId);
-
-        // Assert
-        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
-        var badRequest = result as BadRequestObjectResult;
         
-        // Verifica se a mensagem de erro no JSON está correta
-        Assert.That(badRequest.Value.ToString(), Does.Contain(errorMessage));
+        var result = await _controller.Create(dto);
+        
+        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
+        
+        var badRequest = result as BadRequestObjectResult;
+        Assert.That(badRequest!.Value!.ToString(), Does.Contain(errorMessage));
     }
 }

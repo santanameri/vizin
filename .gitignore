@@ -1,5 +1,6 @@
 ## Erros de compilação e pastas de saída
 **/bin/
+**/obj/
 **/obj/Debug/
 appsettings.Development.json
 coveragereport
@@ -10,6 +11,10 @@ TestResults
 *.user
 *.userosscache
 *.sln.docstates
+
+obj/
+bin/
+.idea/
 
 ## VS Code
 .vscode/
