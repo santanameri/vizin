@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using vizin.Models.Enum;
 
 namespace vizin.Models;
 
