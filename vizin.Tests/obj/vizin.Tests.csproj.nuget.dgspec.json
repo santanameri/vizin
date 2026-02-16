@@ -1,33 +1,40 @@
 {
   "format": 1,
   "restore": {
-    "/Users/lisisabelle/RiderProjects/vizin/vizin.Tests/vizin.Tests.csproj": {}
+    "C:\\Users\\meri-\\Downloads\\vizin\\vizin.Tests\\vizin.Tests.csproj": {}
   },
   "projects": {
-    "/Users/lisisabelle/RiderProjects/vizin/vizin.Tests/vizin.Tests.csproj": {
+    "C:\\Users\\meri-\\Downloads\\vizin\\vizin.Tests\\vizin.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lisisabelle/RiderProjects/vizin/vizin.Tests/vizin.Tests.csproj",
+        "projectUniqueName": "C:\\Users\\meri-\\Downloads\\vizin\\vizin.Tests\\vizin.Tests.csproj",
         "projectName": "vizin.Tests",
-        "projectPath": "/Users/lisisabelle/RiderProjects/vizin/vizin.Tests/vizin.Tests.csproj",
-        "packagesPath": "/Users/lisisabelle/.nuget/packages/",
-        "outputPath": "/Users/lisisabelle/RiderProjects/vizin/vizin.Tests/obj/",
+        "projectPath": "C:\\Users\\meri-\\Downloads\\vizin\\vizin.Tests\\vizin.Tests.csproj",
+        "packagesPath": "C:\\Users\\meri-\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\meri-\\Downloads\\vizin\\vizin.Tests\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/lisisabelle/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\meri-\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/Users/lisisabelle/RiderProjects/vizin/vizin/vizin.csproj": {
-                "projectPath": "/Users/lisisabelle/RiderProjects/vizin/vizin/vizin.csproj"
+              "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\vizin.csproj": {
+                "projectPath": "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\vizin.csproj"
               }
             }
           }
@@ -89,7 +96,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -367,22 +374,29 @@
         }
       }
     },
-    "/Users/lisisabelle/RiderProjects/vizin/vizin/vizin.csproj": {
+    "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\vizin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lisisabelle/RiderProjects/vizin/vizin/vizin.csproj",
+        "projectUniqueName": "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\vizin.csproj",
         "projectName": "vizin",
-        "projectPath": "/Users/lisisabelle/RiderProjects/vizin/vizin/vizin.csproj",
-        "packagesPath": "/Users/lisisabelle/.nuget/packages/",
-        "outputPath": "/Users/lisisabelle/RiderProjects/vizin/vizin/obj/",
+        "projectPath": "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\vizin.csproj",
+        "packagesPath": "C:\\Users\\meri-\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\meri-\\Downloads\\vizin\\vizin\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/lisisabelle/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\meri-\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -453,7 +467,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

@@ -5,6 +5,7 @@ using vizin.Repositories.Property.Interfaces;
 using vizin.Repositories.User;
 using vizin.Services.Property;
 
+
 namespace vizin.Tests.Services.Property;
 
 [TestFixture]
@@ -168,6 +169,117 @@ public class PropertyServiceTests
         });
     }
     
+    //aqui
+   [Test]
+    public async Task UpdateDailyValueAsync_WhenValid_ShouldUpdateAndReturnDto()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyUpdateDailyValueDto { DailyValue = 250.00m };
+        
+        var property = new vizin.Models.TbProperty 
+        { 
+            Id = propertyId, 
+            UserId = _userId, 
+            DailyValue = 100.00m 
+        };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+                         .ReturnsAsync(property);
+
+        // Act
+        var result = await _service.UpdateDailyValueAsync(propertyId, _userId, dto);
+
+        // Assert
+        Assert.That(result.DailyValue, Is.EqualTo(250.00m));
+        _propertyRepoMock.Verify(r => r.PatchAsync(It.Is<vizin.Models.TbProperty>(p => p.DailyValue == 250.00m)), Times.Once);
+    }
+
+    [Test]
+    public void UpdateDailyValueAsync_WhenPropertyNotFound_ShouldThrowKeyNotFoundException()
+    {
+        // Arrange
+        _propertyRepoMock.Setup(r => r.GetPropertyById(It.IsAny<Guid>()))
+                         .ReturnsAsync((vizin.Models.TbProperty)null);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(async () => 
+            await _service.UpdateDailyValueAsync(Guid.NewGuid(), _userId, new PropertyUpdateDailyValueDto()));
+        
+        Assert.That(ex.Message, Is.EqualTo("Propriedade não encontrada"));
+    }
+
+    [Test]
+    public void UpdateDailyValueAsync_WhenUserIsNotOwner_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var strangerId = Guid.NewGuid();
+        
+        var property = new vizin.Models.TbProperty { Id = propertyId, UserId = ownerId };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+                         .ReturnsAsync(property);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<UnauthorizedAccessException>(async () => 
+            await _service.UpdateDailyValueAsync(propertyId, strangerId, new PropertyUpdateDailyValueDto { DailyValue = 100 }));
+            
+        Assert.That(ex.Message, Is.EqualTo("Você não é o proprietário deste imóvel."));
+    }
+
+    [TestCase(0)]
+    [TestCase(-50)]
+    public void UpdateDailyValueAsync_WhenValueIsInvalid_ShouldThrowArgumentException(decimal invalidValue)
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var dto = new PropertyUpdateDailyValueDto { DailyValue = invalidValue };
+        var property = new vizin.Models.TbProperty { Id = propertyId, UserId = _userId };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+                         .ReturnsAsync(property);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.UpdateDailyValueAsync(propertyId, _userId, dto));
+        
+        Assert.That(ex.Message, Is.EqualTo("O valor da diária deve ser maior que zero."));
+    }
+
+    [Test]
+    public void UpdateDailyValueAsync_WhenValueIsNull_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        
+        // Criando o DTO com DailyValue nulo
+        var dto = new PropertyUpdateDailyValueDto { DailyValue = null };
+        
+        var property = new vizin.Models.TbProperty 
+        { 
+            Id = propertyId, 
+            UserId = _userId, 
+            DailyValue = 100.00m 
+        };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+                         .ReturnsAsync(property);
+
+        // Act & Assert
+        // Verifica se o código lança ArgumentException quando o valor é null
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.UpdateDailyValueAsync(propertyId, _userId, dto));
+        
+        Assert.That(ex.Message, Is.EqualTo("O valor da diária deve ser maior que zero."));
+        
+        // Garante que o repositório NUNCA foi chamado para salvar, já que falhou na validação
+        _propertyRepoMock.Verify(r => r.PatchAsync(It.IsAny<vizin.Models.TbProperty>()), Times.Never);
+    }
+
+    //até aqui
+
     [Test]
     public async Task AddAmenitiesAsync_ShouldAddAmenity_WhenValid()
     {
