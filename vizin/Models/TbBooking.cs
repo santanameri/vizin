@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace vizin.Models;
 
@@ -20,6 +21,9 @@ public partial class TbBooking
     public DateTime CheckoutDate { get; set; }
 
     public DateTime? CancelationDate { get; set; }
+    
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TotalCost { get; set; }
 
     public int GuestCount { get; set; }
 

@@ -1,13 +1,18 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using vizin;
 using vizin.Models;
+using vizin.Repositories.Booking;
+using vizin.Repositories.Booking.Interfaces;
 using vizin.Repositories.Property;
 using vizin.Repositories.Property.Interfaces;
 using vizin.Services.Property;
 using vizin.Services.Property.Interfaces;
 using vizin.Repositories.User;
+using vizin.Services.Booking;
+using vizin.Services.Booking.Interfaces;
 using vizin.Services.User;
 using vizin.Services.User.Interface;
 
@@ -55,8 +60,12 @@ builder.Services.AddAuthentication(x =>
         };
     });
 
-
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Faz com que os Enums apareçam como Strings no JSON
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<PostgresContext>();
@@ -66,6 +75,8 @@ builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddAuthorization((options =>
 {
     options.AddPolicy("HospedeOnly", policy => policy.RequireRole("Hospede"));

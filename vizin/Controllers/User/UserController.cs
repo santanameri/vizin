@@ -48,7 +48,7 @@ public class UserController : ControllerBase
                     data = createdUser
                 }
             );
-    } catch(InvalidOperationException ex)
+        } catch(InvalidOperationException ex)
         {
            var problemDetails = new ProblemDetails
            {
