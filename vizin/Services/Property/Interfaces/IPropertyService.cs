@@ -12,4 +12,5 @@ public interface IPropertyService
     Task<PropertyResponseDto> UpdateDailyValueAsync(Guid propertyId, Guid userId, PropertyUpdateDailyValueDto dto);
     Task<PropertyResponseDto> AddAmenitiesAsync(Guid amenityId, Guid propertyId, Guid userId);
     Task<List<AmenityResponseDto>> GetAllAmenities();
+    Task<List<PropertyResponseDto>> FilterProperties(PropertyFilterParams filters);
 }

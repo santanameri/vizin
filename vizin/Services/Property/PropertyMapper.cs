@@ -10,6 +10,7 @@ public static class PropertyMapper
     {
         return new PropertyResponseDto()
         {
+            Id = property.Id,
             Title = property.Title,
             Description = property.Description,
             FullAddress = property.FullAddress,

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using vizin.DTO.Property;
 
 namespace vizin.Repositories.Property;
 
@@ -18,12 +19,19 @@ public class PropertyRepository : IPropertyRepository
     {
         await _context.TbProperties.AddAsync(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
         return property;
     }
     
     public async Task<List<TbProperty>> SelectAllProperties()
     {
-        return await _context.TbProperties.ToListAsync();
+        return await _context.TbProperties
+            .Include(p => p.Amenities)
+            .ToListAsync();
+            
     }
     
     public async Task<List<TbProperty>> SelectAllPropertiesByHost(Guid hostId)
@@ -49,14 +57,22 @@ public class PropertyRepository : IPropertyRepository
         
         _context.Entry(existingProperty).CurrentValues.SetValues(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(existingProperty)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
         
         return existingProperty;
     }
     
-    public async Task PatchAsync(TbProperty property)
+    public async Task<TbProperty> PatchAsync(TbProperty property)
     {
         _context.TbProperties.Update(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
+        return property;
     }
 
     public async Task<List<TbAmenity>> SelectAllAmenity()
@@ -91,7 +107,30 @@ public class PropertyRepository : IPropertyRepository
             throw new InvalidOperationException("Comodidade duplicada!");
         }
         
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
         return property;
+    }
+
+    public async Task<List<TbProperty>> SearchWithFiltersAsync(PropertyFilterParams filters)
+    {
+        var query = _context.TbProperties
+            .Include(p => p.Amenities)
+            .AsNoTracking()
+            .AsQueryable();
+        
+        if (!string.IsNullOrEmpty(filters.Estado))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress, $"%{filters.Estado}%"));
+
+        if (!string.IsNullOrEmpty(filters.Cidade))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress, $"{filters.Cidade}%"));
+
+        if (!string.IsNullOrEmpty(filters.Bairro))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress,  $"{filters.Bairro}%"));
+        
+        return await query.ToListAsync();
     }
 
 }
