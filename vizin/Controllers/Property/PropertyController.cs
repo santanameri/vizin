@@ -31,6 +31,11 @@ public class PropertyController : ControllerBase
     public async Task<IActionResult> GetAllPropertyFilters([FromQuery] PropertyFilterParams filterParams)
     {
         var properties = await _service.FilterProperties(filterParams);
+        if (properties == null || !properties.Any())
+        {
+            return NotFound("Nenhum imóvel encontrado");
+        }
+           
         return Ok(properties);
     }
     
