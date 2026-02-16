@@ -16,7 +16,7 @@ public class PropertyCreateDto
     public bool Availability { get; set; }
     
     [Required(ErrorMessage = "Valor da diária é obrigatório")]
-    [Range(1, 100000)]
+    [Range(1, 100000, ErrorMessage = "O valor não pode ser zero")]
     public decimal? DailyValue { get; set; }
 
     [Required(ErrorMessage = "Capacidade é obrigatória")]
@@ -24,10 +24,10 @@ public class PropertyCreateDto
     public int? Capacity { get; set; }
 
     [Required(ErrorMessage = "Tipo da acomodação é obrigatório")]
-    [Range(1, 3)]
+    [Range(1, 3, ErrorMessage = "O tipo de acomodação deve estar entre 1 e 3")]
     public int? AccomodationType { get; set; }
 
     [Required(ErrorMessage = "Categoria da propriedade é obrigatório")]
-    [Range(1, 4)]
+    [Range(1, 4, ErrorMessage = "A categoria deve estar entre 1 e 4")]
     public int? PropertyCategory { get; set; }
 }

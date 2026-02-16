@@ -1,3 +1,5 @@
+using vizin.DTO.Property.Amenity;
+
 namespace vizin.DTO.Property;
 
 public class PropertyResponseDto
@@ -10,4 +12,5 @@ public class PropertyResponseDto
     public int Capacity { get; set; }
     public int AccomodationType { get; set; }
     public int PropertyCategory { get; set; }
+    public List<AmenityResponseDto>? Amenities { get; set; }
 }
