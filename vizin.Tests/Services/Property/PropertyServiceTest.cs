@@ -427,5 +427,80 @@ public class PropertyServiceTests
         Assert.That(result, Is.Not.Null);
         _propertyRepoMock.Verify(repo => repo.SearchWithFiltersAsync(It.Is<PropertyFilterParams>(f => f.Cidade == "teresina")), Times.Once);
     }
+    
+    [Test]
+    public async Task RemoveAmenityAsync_ShouldReturnDto_WhenRemovalIsSuccessful()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        var property = new TbProperty { Id = propertyId, UserId = _userId, Amenities = new List<TbAmenity>() };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        _propertyRepoMock.Setup(r => r.RemoveAmenityAsync(amenityId, propertyId))
+            .ReturnsAsync(property);
+
+        // Act
+        var result = await _service.RemoveAmenityAsync(amenityId, propertyId, _userId);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Id, Is.EqualTo(propertyId));
+        _propertyRepoMock.Verify(r => r.RemoveAmenityAsync(amenityId, propertyId), Times.Once);
+    }
+
+    [Test]
+    public void RemoveAmenityAsync_ShouldThrowKeyNotFoundException_WhenPropertyDoesNotExist()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync((TbProperty)null);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(async () => 
+            await _service.RemoveAmenityAsync(Guid.NewGuid(), propertyId, _userId));
+        
+        Assert.That(ex.Message, Is.EqualTo("Imóvel não encontrado"));
+    }
+
+    [Test]
+    public void RemoveAmenityAsync_ShouldThrowUnauthorizedAccessException_WhenUserIsNotTheOwner()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var differentUserId = Guid.NewGuid();
+        var property = new TbProperty { Id = propertyId, UserId = differentUserId };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        // Act & Assert
+        Assert.ThrowsAsync<UnauthorizedAccessException>(async () => 
+            await _service.RemoveAmenityAsync(Guid.NewGuid(), propertyId, _userId));
+    }
+
+    [Test]
+    public void RemoveAmenityAsync_ShouldThrowKeyNotFoundException_WhenRepositoryReturnNullOnUpdate()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        var property = new TbProperty { Id = propertyId, UserId = _userId };
+
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+
+        _propertyRepoMock.Setup(r => r.RemoveAmenityAsync(amenityId, propertyId))
+            .ReturnsAsync((TbProperty)null);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(async () => 
+            await _service.RemoveAmenityAsync(amenityId, propertyId, _userId));
+            
+        Assert.That(ex.Message, Is.EqualTo("Erro ao processar a remoção."));
+    }
 
 }

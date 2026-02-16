@@ -133,4 +133,22 @@ public class PropertyRepository : IPropertyRepository
         return await query.ToListAsync();
     }
 
+    public async Task<TbProperty?> RemoveAmenityAsync(Guid amenityId, Guid propertyId)
+    {
+        var property = await _context.TbProperties
+            .Include(p => p.Amenities)
+            .FirstOrDefaultAsync(p => p.Id == propertyId);
+
+        if (property == null) return null;
+
+        var amenity = property.Amenities.FirstOrDefault(a => a.Id == amenityId);
+
+        if (amenity != null)
+        {
+            property.Amenities.Remove(amenity);
+            await _context.SaveChangesAsync();
+        }
+
+        return property;
+    }
 }
