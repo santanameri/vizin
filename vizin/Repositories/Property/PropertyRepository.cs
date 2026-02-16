@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using vizin.DTO.Property;
 
 namespace vizin.Repositories.Property;
 
@@ -111,6 +112,25 @@ public class PropertyRepository : IPropertyRepository
             .LoadAsync();
 
         return property;
+    }
+
+    public async Task<List<TbProperty>> SearchWithFiltersAsync(PropertyFilterParams filters)
+    {
+        var query = _context.TbProperties
+            .Include(p => p.Amenities)
+            .AsNoTracking()
+            .AsQueryable();
+        
+        if (!string.IsNullOrEmpty(filters.Estado))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress, $"%{filters.Estado}%"));
+
+        if (!string.IsNullOrEmpty(filters.Cidade))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress, $"{filters.Cidade}%"));
+
+        if (!string.IsNullOrEmpty(filters.Bairro))
+            query = query.Where(p => EF.Functions.ILike(p.FullAddress,  $"{filters.Bairro}%"));
+        
+        return await query.ToListAsync();
     }
 
 }

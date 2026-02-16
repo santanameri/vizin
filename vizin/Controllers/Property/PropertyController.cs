@@ -25,6 +25,14 @@ public class PropertyController : ControllerBase
         var properties = await _service.GetProperties();
         return Ok(properties);
     }
+
+    [Authorize(Policy = "HospedeOnly")]
+    [HttpGet("filter")]
+    public async Task<IActionResult> GetAllPropertyFilters([FromQuery] PropertyFilterParams filterParams)
+    {
+        var properties = await _service.FilterProperties(filterParams);
+        return Ok(properties);
+    }
     
     [Authorize(Policy = "AnfitriaoOnly")]
     [HttpGet("my")]
@@ -150,4 +158,5 @@ public class PropertyController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    
 }

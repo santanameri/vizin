@@ -316,5 +316,38 @@ public class PropertyControllerTests
 
         Assert.That(result, Is.InstanceOf<UnauthorizedResult>());
     }
+    
+    [Test]
+    public async Task GetFiltered_WhenParametersAreValid_ShouldReturnOk()
+    {
+      
+        var filters = new PropertyFilterParams { Cidade = "Teresina" };
+        var expectedDtoList = new List<PropertyResponseDto> 
+        { 
+            new PropertyResponseDto { Id = new Guid(), FullAddress = "Endereço Teste" } 
+        };
+      
+        _serviceMock
+            .Setup(s => s.FilterProperties(It.IsAny<PropertyFilterParams>()))
+            .ReturnsAsync(expectedDtoList);
+     
+        var result = await _controller.GetAllPropertyFilters(filters);
+        
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult.StatusCode, Is.EqualTo(200));
+        Assert.That(okResult.Value, Is.EqualTo(expectedDtoList));
+    }
 
+    [Test]
+    public async Task GetFiltered_WhenNoPropertiesFound_ShouldReturnNotFound()
+    {
+        _serviceMock
+            .Setup(s => s.FilterProperties(It.IsAny<PropertyFilterParams>()))
+            .ReturnsAsync(new List<PropertyResponseDto>()); // Lista vazia
+        
+        var result = await _controller.GetAllPropertyFilters(new PropertyFilterParams());
+
+        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
+    }
 }

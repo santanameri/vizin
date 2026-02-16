@@ -14,4 +14,5 @@ public interface IPropertyRepository
     Task<List<TbAmenity>> SelectAllAmenity();
     Task<TbAmenity?> GetAmenityById(Guid amenityId);
     Task<TbProperty?> AddAmenityAsync(Guid amenityId, Guid propertyId);
+    Task<List<TbProperty>> SearchWithFiltersAsync(PropertyFilterParams filters);
 }

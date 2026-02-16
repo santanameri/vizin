@@ -159,4 +159,10 @@ public class PropertyService : IPropertyService
             Name = a.Name,
         }).ToList();
     }
+
+    public async Task<List<PropertyResponseDto>> FilterProperties(PropertyFilterParams filters)
+    {
+        var properties = await _propertyRepository.SearchWithFiltersAsync(filters);
+        return properties.Select(p => p.ToDto()).ToList();
+    }
 }

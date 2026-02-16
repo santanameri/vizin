@@ -408,4 +408,24 @@ public class PropertyServiceTests
         Assert.That(ex.Message, Is.EqualTo("Essa comodidade já está cadastrada."));
     }
 
+    [Test]
+    public async Task Search_WhenFilteringByCityCaseInsensitive_ShouldReturnCorrectProperties()
+    {
+        var filters = new PropertyFilterParams { Cidade = "teresina" };
+        
+        var fakeProperties = new List<TbProperty> 
+        { 
+            new TbProperty { Id = new Guid(), FullAddress = "Rua A, Teresina - PI" } 
+        };
+        
+        _propertyRepoMock
+            .Setup(repo => repo.SearchWithFiltersAsync(It.IsAny<PropertyFilterParams>()))
+            .ReturnsAsync(fakeProperties);
+        
+        var result = await _service.FilterProperties(filters);
+        
+        Assert.That(result, Is.Not.Null);
+        _propertyRepoMock.Verify(repo => repo.SearchWithFiltersAsync(It.Is<PropertyFilterParams>(f => f.Cidade == "teresina")), Times.Once);
+    }
+
 }
