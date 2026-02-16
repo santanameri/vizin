@@ -165,4 +165,23 @@ public class PropertyService : IPropertyService
         var properties = await _propertyRepository.SearchWithFiltersAsync(filters);
         return properties.Select(p => p.ToDto()).ToList();
     }
+
+    public async Task<PropertyResponseDto> RemoveAmenityAsync(Guid amenityId, Guid propertyId, Guid userId)
+    {
+        var property = await _propertyRepository.GetPropertyById(propertyId);
+        
+        if (property == null)
+            throw new KeyNotFoundException("Imóvel não encontrado");
+        
+        // Validação crucial: apenas o dono do imóvel pode remover comodidades
+        if (property.UserId != userId)
+            throw new UnauthorizedAccessException("Você não tem permissão para editar este imóvel.");
+
+        var updatedProperty = await _propertyRepository.RemoveAmenityAsync(amenityId, propertyId);
+
+        if (updatedProperty == null)
+            throw new KeyNotFoundException("Erro ao processar a remoção.");
+
+        return updatedProperty.ToDto();
+    }
 }

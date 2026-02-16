@@ -350,4 +350,55 @@ public class PropertyControllerTests
 
         Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
     }
+
+    [Test]
+    public async Task RemoveAmenity_ShouldReturnOk_WhenRemovalIsSuccessful()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        var expectedResult = new PropertyResponseDto { Id = propertyId };
+
+        _serviceMock.Setup(s => s.RemoveAmenityAsync(amenityId, propertyId, _userId))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var actionResult = await _controller.RemoveAmenity(propertyId, amenityId);
+
+        // Assert
+        var result = actionResult as OkObjectResult;
+        
+        // Nova sintaxe NUnit recomendada:
+        Assert.That(result, Is.Not.Null); 
+        Assert.That(result.StatusCode, Is.EqualTo(200));
+        
+        // Para acessar o objeto anônimo com segurança
+        var message = result.Value.GetType().GetProperty("message").GetValue(result.Value, null) as string;
+        Assert.That(message, Is.EqualTo("Comodidade removida com sucesso!"));
+    }
+
+    [Test]
+    public async Task RemoveAmenity_ShouldReturnNotFound_WhenKeyNotFoundExceptionIsThrown()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        var errorMessage = "Imóvel não encontrado";
+
+        _serviceMock.Setup(s => s.RemoveAmenityAsync(amenityId, propertyId, _userId))
+            .ThrowsAsync(new KeyNotFoundException(errorMessage));
+
+        // Act
+        var actionResult = await _controller.RemoveAmenity(propertyId, amenityId);
+
+        // Assert
+        var result = actionResult as NotFoundObjectResult;
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.StatusCode, Is.EqualTo(404));
+        
+        var message = result.Value.GetType().GetProperty("message").GetValue(result.Value, null) as string;
+        Assert.That(message, Is.EqualTo(errorMessage));
+    }
+
+
 }
