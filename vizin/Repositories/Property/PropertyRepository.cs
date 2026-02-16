@@ -18,12 +18,19 @@ public class PropertyRepository : IPropertyRepository
     {
         await _context.TbProperties.AddAsync(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
         return property;
     }
     
     public async Task<List<TbProperty>> SelectAllProperties()
     {
-        return await _context.TbProperties.ToListAsync();
+        return await _context.TbProperties
+            .Include(p => p.Amenities)
+            .ToListAsync();
+            
     }
     
     public async Task<List<TbProperty>> SelectAllPropertiesByHost(Guid hostId)
@@ -49,14 +56,22 @@ public class PropertyRepository : IPropertyRepository
         
         _context.Entry(existingProperty).CurrentValues.SetValues(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(existingProperty)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
         
         return existingProperty;
     }
     
-    public async Task PatchAsync(TbProperty property)
+    public async Task<TbProperty> PatchAsync(TbProperty property)
     {
         _context.TbProperties.Update(property);
         await _context.SaveChangesAsync();
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
+        return property;
     }
 
     public async Task<List<TbAmenity>> SelectAllAmenity()
@@ -91,6 +106,10 @@ public class PropertyRepository : IPropertyRepository
             throw new InvalidOperationException("Comodidade duplicada!");
         }
         
+        await _context.Entry(property)
+            .Collection(p => p.Amenities)
+            .LoadAsync();
+
         return property;
     }
 
