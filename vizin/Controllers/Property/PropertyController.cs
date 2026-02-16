@@ -163,5 +163,33 @@ public class PropertyController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [Authorize(Policy = "AnfitriaoOnly")]
+    [HttpDelete("remove-amenity/{propertyId:guid}/{amenityId:guid}")]
+    public async Task<IActionResult> RemoveAmenity([FromRoute] Guid propertyId, [FromRoute] Guid amenityId)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        try
+        {
+            var result = await _service.RemoveAmenityAsync(amenityId, propertyId, userId);
+            return Ok(new { result, message = "Comodidade removida com sucesso!" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(); // Ou Challenge() dependendo da sua config
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
     
 }
