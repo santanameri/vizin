@@ -38,13 +38,13 @@ public class PropertyControllerTests
     {
         // ARRANGE
         var propertyId = Guid.NewGuid();
-        var dto = new PropertyResponseDto
+        var dto = new PropertyCreateDto()
         {
             Title = "Novo título",
             DailyValue = 200
         };
 
-        var expectedResponse = new PropertyResponseDto
+        var expectedResponse = new PropertyResponseDto()
         {
             Title = "Novo título",
             DailyValue = 200
@@ -73,7 +73,7 @@ public class PropertyControllerTests
     {
         // ARRANGE
         var propertyId = Guid.NewGuid();
-        var dto = new PropertyResponseDto
+        var dto = new PropertyCreateDto()
         {
             Title = "Teste",
             DailyValue = 0
@@ -102,7 +102,7 @@ public class PropertyControllerTests
     {
         // ARRANGE
         var propertyId = Guid.NewGuid();
-        var dto = new PropertyResponseDto();
+        var dto = new PropertyCreateDto();
 
         // Remove o usuário do contexto
         _controller.ControllerContext = new ControllerContext
@@ -175,7 +175,7 @@ public class PropertyControllerTests
         var dto = new AddAmenityDto { AmenityId = amenityId };
 
         _serviceMock
-            .Setup(s => s.AddAmenitiesAsync(amenityId, propertyId))
+            .Setup(s => s.AddAmenitiesAsync(amenityId, propertyId, _userId))
             .ReturnsAsync(new PropertyResponseDto());
 
         var result = await _controller.CreateAmenity(propertyId, dto);
@@ -183,7 +183,7 @@ public class PropertyControllerTests
         Assert.That(result, Is.InstanceOf<OkObjectResult>());
 
         _serviceMock.Verify(
-            s => s.AddAmenitiesAsync(amenityId, propertyId),
+            s => s.AddAmenitiesAsync(amenityId, propertyId, _userId),
             Times.Once);
     }
     

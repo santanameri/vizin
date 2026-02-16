@@ -38,7 +38,7 @@ public class PropertyController : ControllerBase
 
     [Authorize(Policy = "AnfitriaoOnly")]
     [HttpPut("{propertyId:guid}")]
-    public async Task<IActionResult> UpdateProperty([FromBody] PropertyResponseDto dto, [FromRoute] Guid propertyId)
+    public async Task<IActionResult> UpdateProperty([FromBody] PropertyCreateDto dto, [FromRoute] Guid propertyId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
        
@@ -96,9 +96,7 @@ public class PropertyController : ControllerBase
     
     [Authorize(Policy= "AnfitriaoOnly")]
     [HttpPost]
-    public async Task<IActionResult> Create(
-    [FromBody] PropertyCreateDto dto
-    )
+    public async Task<IActionResult> Create([FromBody] PropertyCreateDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
         try
@@ -120,12 +118,13 @@ public class PropertyController : ControllerBase
     public async Task<IActionResult> CreateAmenity([FromRoute] Guid propertyId, [FromBody] AddAmenityDto dto)
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
         try
         {
-            var result = await _service.AddAmenitiesAsync(dto.AmenityId, propertyId);
+            var result = await _service.AddAmenitiesAsync(dto.AmenityId, propertyId, userId);
             return Ok(new { result, message = "Comodidade adicionada com sucesso!" });
         }
         catch (Exception ex)

@@ -37,7 +37,7 @@ public class PropertyServiceTests
         var user = new TbUser();
         _userId = user.Id;
         
-        var dto = new PropertyResponseDto
+        var dto = new PropertyCreateDto()
         {
             Title = "Novo título",
             Description = "Desc",
@@ -77,7 +77,7 @@ public class PropertyServiceTests
             .ReturnsAsync((TbProperty)null);
 
         Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _service.UpdateProperty(new PropertyResponseDto(), userId, propertyId));
+            await _service.UpdateProperty(new PropertyCreateDto(), userId, propertyId));
     }
     
     [Test]
@@ -94,8 +94,8 @@ public class PropertyServiceTests
             .Setup(x => x.SelectUserById(userId))
             .ReturnsAsync((TbUser)null);
 
-        Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _service.UpdateProperty(new PropertyResponseDto(), userId, propertyId));
+        Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _service.UpdateProperty(new PropertyCreateDto(), userId, propertyId));
     }
     
     [Test]
@@ -112,11 +112,11 @@ public class PropertyServiceTests
             .ReturnsAsync(new TbUser { Id = _userId });
 
         Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
-            await _service.UpdateProperty(new PropertyResponseDto(), _userId, propertyId));
+            await _service.UpdateProperty(new PropertyCreateDto(), _userId, propertyId));
     }
 
     [Test]
-    public void UpdateProperty_DeveErro_QuandoDailyValueInvalido()
+    public void UpdateProperty_ShowError_WhenDailyValueInvalid()
     {
         var propertyId = Guid.NewGuid();
 
@@ -128,45 +128,12 @@ public class PropertyServiceTests
             .Setup(x => x.SelectUserById(_userId))
             .ReturnsAsync(new TbUser { Id = _userId });
 
-        var dto = new PropertyResponseDto { DailyValue = 0 };
+        var dto = new PropertyCreateDto() { DailyValue = 0 };
 
         Assert.ThrowsAsync<ArgumentException>(async () =>
             await _service.UpdateProperty(dto, _userId, propertyId));
     }
-
-    [Test]
-    public void CreateProperty_ShouldThrowException_WhenUserIsNotHost()
-    {
-        var userId = Guid.NewGuid();
-        // ARRANGE
-        var dto = new PropertyCreateDto
-        {
-            Title = "Casa Luxo",
-            Description = "Desc",
-            FullAddress = "Rua 1",
-            Availability = true,
-            DailyValue = 100,
-            Capacity = 2,
-            AccomodationType = 1,
-            PropertyCategory = 2
-        };
-        
-        var user = new TbUser { Id = userId, Type = 2 }; 
-        
-        _userRepoMock.Setup(r => r.SelectUserById(userId))
-            .ReturnsAsync(user);
-        
-        _propertyRepoMock
-            .Setup(r => r.Create(It.IsAny<TbProperty>()))
-            .Returns((TbProperty p) => p);
-
-        // ACT & ASSERT
-        var ex = Assert.ThrowsAsync<Exception>(async () => 
-            await _service.CreateProperty(dto, userId));
-
-        Assert.That(ex.Message, Is.EqualTo("Apenas usuários do tipo Anfitrião podem cadastrar imóveis"));
-    }
-
+    
     [Test]
     public async Task CreateProperty_ShouldReturnResponse_WhenEverythingIsValid()
     {
@@ -188,7 +155,7 @@ public class PropertyServiceTests
         
         // Mockando o retorno do repositório de propriedade
         _propertyRepoMock.Setup(r => r.Create(It.IsAny<TbProperty>()))
-                         .Returns((TbProperty p) => p); // Retorna o próprio objeto que recebeu
+                         .ReturnsAsync((TbProperty p) => p); // Retorna o próprio objeto que recebeu
 
         // ACT
         var result = await _service.CreateProperty(dto, _userId);
@@ -228,7 +195,7 @@ public class PropertyServiceTests
             .Callback(() => property.Amenities.Add(amenity)) // simula banco
             .ReturnsAsync(property);
         
-        var result = await _service.AddAmenitiesAsync(amenityId, propertyId);
+        var result = await _service.AddAmenitiesAsync(amenityId, propertyId, _userId);
         
         Assert.That(result.Amenities.Count, Is.EqualTo(1));
         _propertyRepoMock.Verify(
@@ -246,8 +213,8 @@ public class PropertyServiceTests
             .Setup(r => r.GetPropertyById(propertyId))
             .ReturnsAsync((TbProperty?)null);
 
-        var ex = Assert.ThrowsAsync<Exception>(() =>
-            _service.AddAmenitiesAsync(amenityId, propertyId));
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId, _userId));
 
         Assert.That(ex!.Message, Is.EqualTo("Imóvel não encontrado"));
     }
@@ -272,14 +239,14 @@ public class PropertyServiceTests
             .Setup(r => r.GetAmenityById(amenityId))
             .ReturnsAsync((TbAmenity?)null);
 
-        var ex = Assert.ThrowsAsync<Exception>(() =>
-            _service.AddAmenitiesAsync(amenityId, propertyId));
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId, _userId));
 
         Assert.That(ex!.Message, Is.EqualTo("Comodidade não encontrada"));
     }
 
     [Test]
-    public void AddAmenitiesAsync_ShouldThrow_WhenAmenityAlreadyExists()
+    public void AddAmenitiesAsync_ShouldThrow_WhenAmenityReturnsNull()
     {
         var propertyId = Guid.NewGuid();
         var amenityId = Guid.NewGuid();
@@ -300,10 +267,33 @@ public class PropertyServiceTests
             .Setup(r => r.GetAmenityById(amenityId))
             .ReturnsAsync(amenity);
 
-        var ex = Assert.ThrowsAsync<Exception>(() =>
-            _service.AddAmenitiesAsync(amenityId, propertyId));
+        var ex = Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.AddAmenitiesAsync(amenityId, propertyId, _userId));
 
-        Assert.That(ex!.Message, Is.EqualTo("Essa comodidade já está cadastrada."));
+        Assert.That(ex!.Message, Is.EqualTo("Comodidade não encontrada"));
+    }
+    
+    [Test]
+    public void AddAmenitiesAsync_ShouldThrowException_WhenAmenityAlreadyExists()
+    {
+        var propertyId = Guid.NewGuid();
+        var amenityId = Guid.NewGuid();
+        
+        var property = new TbProperty { Id = propertyId };
+        _propertyRepoMock.Setup(r => r.GetPropertyById(propertyId))
+            .ReturnsAsync(property);
+        
+        var amenity = new TbAmenity { Id = amenityId, Name = "WiFi" };
+        _propertyRepoMock.Setup(r => r.GetAmenityById(amenityId))
+            .ReturnsAsync(amenity);
+        
+        _propertyRepoMock.Setup(r => r.AddAmenityAsync(amenityId, propertyId))
+            .ThrowsAsync(new InvalidOperationException("Essa comodidade já está cadastrada."));
+        
+        var ex = Assert.ThrowsAsync<InvalidOperationException>(async () => 
+            await _service.AddAmenitiesAsync(amenityId, propertyId, _userId));
+
+        Assert.That(ex.Message, Is.EqualTo("Essa comodidade já está cadastrada."));
     }
 
 }

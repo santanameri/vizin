@@ -1,8 +1,3 @@
-using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using Microsoft.AspNetCore.Http.HttpResults;
 using vizin.Repositories.User;
 using vizin.DTO.Property;
 using vizin.DTO.Property.Amenity;
@@ -26,67 +21,19 @@ public class PropertyService : IPropertyService
         _propertyRepository = propertyRepository;
         _userRepository = userRepository;
     }
-
-
+    
     public async Task<List<PropertyResponseDto>> GetProperties()
     {
         var properties = await _propertyRepository.SelectAllProperties();
-        var response = new List<PropertyResponseDto>();
 
-        foreach (var property in properties)
-        {
-            response.Add(new PropertyResponseDto
-            {
-                Title = property.Title,
-                Description = property.Description,
-                FullAddress = property.FullAddress,
-                Availability = property.Availability,
-                DailyValue = (decimal)property.DailyValue,
-                Capacity = property.Capacity,
-                AccomodationType = property.AccomodationType,
-                PropertyCategory = property.PropertyCategory,
-                Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-                {
-                    Id = a.Id,
-                    Name = a.Name,
-                }).ToList()
-            });
-        }
-
-        return response;
+        return properties.Select(property => property.ToDto()).ToList();
     }
     
-    public async Task<List<PropertyResponseDto>> GetPropertiesByHost(Guid userId)
+    public async Task<List<PropertyResponseDto>> GetPropertiesByHost(Guid hostId)
     {
-        TbUser? user = await _userRepository.SelectUserById(userId);
+        var properties = await _propertyRepository.SelectAllPropertiesByHost(hostId);
 
-        if (user == null)
-            throw new Exception("Usuário não encontrado");
-        
-        var properties = await _propertyRepository.SelectAllPropertiesByHost(userId);
-        var response = new List<PropertyResponseDto>();
-
-        foreach (var property in properties)
-        {
-            response.Add(new PropertyResponseDto
-            {
-                Title = property.Title,
-                Description = property.Description,
-                FullAddress = property.FullAddress,
-                Availability = property.Availability,
-                DailyValue = (decimal)property.DailyValue,
-                Capacity = property.Capacity,
-                AccomodationType = property.AccomodationType,
-                PropertyCategory = property.PropertyCategory,
-                Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-                {
-                    Id = a.Id,
-                    Name = a.Name,
-                }).ToList()
-            });
-        }
-
-        return response;
+        return properties.Select(property => property.ToDto()).ToList();
     }
 
     public async Task<PropertyResponseDto> CreateProperty(PropertyCreateDto dto, Guid userId)
@@ -94,11 +41,20 @@ public class PropertyService : IPropertyService
         TbUser? user = await _userRepository.SelectUserById(userId);
 
         if (user == null)
-            throw new Exception("Usuário não encontrado");
+            throw new KeyNotFoundException("Usuário não encontrado");
         
-        if (user.Type != 1)
-            throw new Exception("Apenas usuários do tipo Anfitrião podem cadastrar imóveis");
-        
+        if (dto.DailyValue is null or <= 0)
+            throw new ArgumentException("Diária inválida");
+
+        if (dto.Capacity is null or <= 0)
+            throw new ArgumentException("Capacidade inválida");
+
+        if (dto.AccomodationType is null or <= 0)
+            throw new ArgumentException("Tipo de acomodação inválida.");
+
+        if (dto.PropertyCategory is null or <= 0)
+            throw new ArgumentException("Tipo de categoria errada");
+
         TbProperty property = new TbProperty
         {
             Id = Guid.NewGuid(),
@@ -106,86 +62,52 @@ public class PropertyService : IPropertyService
             Description = dto.Description,
             FullAddress = dto.FullAddress,
             Availability = dto.Availability,
-            DailyValue = dto.DailyValue!.Value,
-            Capacity = dto.Capacity!.Value,
-            AccomodationType = dto.AccomodationType!.Value,
-            PropertyCategory = dto.PropertyCategory!.Value,
+            DailyValue = dto.DailyValue.Value,
+            Capacity = dto.Capacity.Value,
+            AccomodationType = dto.AccomodationType.Value,
+            PropertyCategory = dto.PropertyCategory.Value,
             UserId = user.Id
         };
 
-        TbProperty created = _propertyRepository.Create(property);
+        TbProperty created = await _propertyRepository.Create(property);
 
-        return new PropertyResponseDto
-        {
-            Title = created.Title,
-            Description = created.Description,
-            FullAddress = created.FullAddress,
-            Availability = created.Availability, 
-            DailyValue = (decimal)created.DailyValue,
-            Capacity = created.Capacity,
-            AccomodationType = created.AccomodationType,
-            PropertyCategory = created.PropertyCategory,
-            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-            {
-                Id = a.Id,
-                Name = a.Name,
-            }).ToList()
-        };
+       return  created.ToDto();
     }
 
-    public async Task<PropertyResponseDto> UpdateProperty(PropertyResponseDto dto, Guid userId, Guid propertyId)
+    public async Task<PropertyResponseDto> UpdateProperty(PropertyCreateDto dto, Guid userId, Guid propertyId)
     {
         var property  = await _propertyRepository.GetPropertyById(propertyId);
-        Console.WriteLine(property);
+       
         if (property == null)
-        {
             throw new KeyNotFoundException("Imóvel não encontrado.");
-        }
-        
-        var user = await _userRepository.SelectUserById(userId);
 
-        if (user == null)
-        {
-            throw new KeyNotFoundException("Usuário não encontrado.");
-        }
-        
         if (property.UserId != userId)
-        {
             throw new UnauthorizedAccessException("Você não ten permissão para editar este imóvel.");
-        }
+        
+        if (dto.DailyValue is null or <= 0)
+            throw new ArgumentException("Diária inválida");
 
-        if (dto.DailyValue <= 0)
-        {
-            throw new ArgumentException("O valor da diária deve ser maior que 0.");
-        }
+        if (dto.Capacity is null or <= 0)
+            throw new ArgumentException("Capacidade inválida");
+
+        if (dto.AccomodationType is null or <= 0)
+            throw new ArgumentException("Tipo de acomodação inválida.");
+
+        if (dto.PropertyCategory is null or <= 0)
+            throw new ArgumentException("Tipo de categoria errada");
         
         property.Title = dto.Title;
         property.Description = dto.Description;
         property.FullAddress = dto.FullAddress;
         property.Availability = dto.Availability;
-        property.DailyValue = dto.DailyValue;
-        property.Capacity = dto.Capacity;
-        property.AccomodationType = dto.AccomodationType;
-        property.PropertyCategory = dto.PropertyCategory;
+        property.DailyValue = dto.DailyValue.Value;
+        property.Capacity = dto.Capacity.Value;
+        property.AccomodationType = dto.AccomodationType.Value;
+        property.PropertyCategory = dto.PropertyCategory.Value;
         
         var result = await _propertyRepository.Update(propertyId, property);
 
-        return new PropertyResponseDto
-        {
-            Title = result.Title,
-            Description = result.Description,
-            FullAddress = result.FullAddress,
-            Availability = result.Availability,
-            DailyValue = result.DailyValue,
-            Capacity = result.Capacity,
-            AccomodationType = result.AccomodationType,
-            PropertyCategory = result.PropertyCategory,
-            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-            {
-                Id = a.Id,
-                Name = a.Name,
-            }).ToList()
-        };
+        return result.ToDto();
     }
     
     public async Task<PropertyResponseDto> UpdateDailyValueAsync(Guid propertyId, Guid userId, PropertyUpdateDailyValueDto dto)
@@ -198,62 +120,34 @@ public class PropertyService : IPropertyService
         if (property.UserId != userId)
             throw new UnauthorizedAccessException("Você não é o proprietário deste imóvel.");
 
-        if (dto.DailyValue <= 0)
+        if (dto.DailyValue is null or <= 0)
             throw new ArgumentException("O valor da diária deve ser maior que zero.");
 
-        property.DailyValue = dto.DailyValue!.Value;
+        property.DailyValue = dto.DailyValue.Value;
 
         await _propertyRepository.PatchAsync(property);
 
-        return new PropertyResponseDto
-        {
-            Title = property.Title,
-            Description = property.Description,
-            FullAddress = property.FullAddress,
-            Availability = property.Availability,
-            DailyValue = property.DailyValue,
-            Capacity = property.Capacity,
-            AccomodationType = property.AccomodationType,
-            PropertyCategory = property.PropertyCategory,
-            Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-            {
-                Id = a.Id,
-                Name = a.Name,
-            }).ToList()
-        };
+        return property.ToDto();
     }
 
-    public async Task<PropertyResponseDto> AddAmenitiesAsync(Guid amenityId, Guid propertyId)
+    public async Task<PropertyResponseDto> AddAmenitiesAsync(Guid amenityId, Guid propertyId, Guid userId)
     { 
       var property = await _propertyRepository.GetPropertyById(propertyId);
+      
       if (property == null)
-          throw new Exception("Imóvel não encontrado");
+          throw new KeyNotFoundException("Imóvel não encontrado");
+      
+      if (property.UserId != userId)
+          throw new UnauthorizedAccessException("Você não tem permissão para editar este imóvel.");
       
       var amenity = await _propertyRepository.GetAmenityById(amenityId);
-      if (amenity == null)
-          throw new Exception("Comodidade não encontrada");
-
-      if (property.Amenities.Any(a => a.Id == amenityId))
-          throw new Exception("Essa comodidade já está cadastrada.");
       
-      await _propertyRepository.AddAmenityAsync(amenityId, propertyId);
+      var updatedProperty = await _propertyRepository.AddAmenityAsync(amenityId, propertyId);
 
-      return new PropertyResponseDto()
-      {
-          Title = property.Title,
-          Description = property.Description,
-          FullAddress = property.FullAddress,
-          Availability = property.Availability,
-          DailyValue = property.DailyValue,
-          Capacity = property.Capacity,
-          AccomodationType = property.AccomodationType,
-          PropertyCategory = property.PropertyCategory,
-          Amenities = property.Amenities.Select(a => new AmenityResponseDto()
-          {
-              Id = a.Id,
-              Name = a.Name,
-          }).ToList()
-      };
+      if (updatedProperty == null)
+          throw new KeyNotFoundException("Comodidade não encontrada");
+      
+      return property.ToDto();
     }
 
     public async Task<List<AmenityResponseDto>> GetAllAmenities()
