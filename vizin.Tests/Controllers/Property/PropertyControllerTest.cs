@@ -164,6 +164,123 @@ public class PropertyControllerTests
         var badRequest = result as BadRequestObjectResult;
         Assert.That(badRequest!.Value!.ToString(), Does.Contain(errorMessage));
     }
+
+    [Test]
+    public async Task UpdateDailyValue_ShouldReturnOk_WhenUpdateIsSuccessful()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+
+        var dto = new PropertyUpdateDailyValueDto
+        {
+            DailyValue = 150
+        };
+
+        var serviceResponse = new PropertyResponseDto
+        {
+            DailyValue = 150
+        };
+
+        _serviceMock
+            .Setup(s => s.UpdateDailyValueAsync(
+                propertyId,
+                _userId,
+                It.Is<PropertyUpdateDailyValueDto>(d => d.DailyValue == 150)))
+            .ReturnsAsync(serviceResponse);
+
+        // Act
+        var result = await _controller.UpdateDailyValue(propertyId, dto);
+
+        // Assert
+        var okResult = result as OkObjectResult;
+
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult!.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+    }
+
+    [Test]
+    public async Task UpdateDailyValue_ShouldReturnBadRequest_WhenModelStateIsInvalid()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+
+        var dto = new PropertyUpdateDailyValueDto
+        {
+            DailyValue = 150
+        };
+
+        _controller.ModelState.AddModelError("DailyValue", "Required");
+
+        // Act
+        var result = await _controller.UpdateDailyValue(propertyId, dto);
+
+        // Assert
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+
+        _serviceMock.Verify(
+            s => s.UpdateDailyValueAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<PropertyUpdateDailyValueDto>()),
+            Times.Never);
+    }
+
+    [Test]
+    public async Task UpdateDailyValue_ShouldReturnNotFound_WhenKeyNotFoundExceptionIsThrown()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+
+        var dto = new PropertyUpdateDailyValueDto
+        {
+            DailyValue = 200
+        };
+
+        _serviceMock
+            .Setup(s => s.UpdateDailyValueAsync(
+                propertyId,
+                _userId,
+                It.IsAny<PropertyUpdateDailyValueDto>()))
+            .ThrowsAsync(new KeyNotFoundException("Property not found"));
+
+        // Act
+        var result = await _controller.UpdateDailyValue(propertyId, dto);
+
+        // Assert
+        var notFoundResult = result as NotFoundObjectResult;
+
+        Assert.That(notFoundResult, Is.Not.Null);
+        Assert.That(notFoundResult!.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+    }
+
+    [Test]
+    public async Task UpdateDailyValue_ShouldReturnBadRequest_WhenArgumentExceptionIsThrown()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+
+        var dto = new PropertyUpdateDailyValueDto
+        {
+            DailyValue = -10
+        };
+
+        _serviceMock
+            .Setup(s => s.UpdateDailyValueAsync(
+                propertyId,
+                _userId,
+                It.IsAny<PropertyUpdateDailyValueDto>()))
+            .ThrowsAsync(new ArgumentException("Invalid value"));
+
+        // Act
+        var result = await _controller.UpdateDailyValue(propertyId, dto);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+
+        Assert.That(badRequestResult, Is.Not.Null);
+        Assert.That(badRequestResult!.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+    }
+
     
     [Test]
     public async Task CreateAmenity_ShouldReturnOk_WhenValid()
