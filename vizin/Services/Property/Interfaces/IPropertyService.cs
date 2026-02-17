@@ -14,4 +14,5 @@ public interface IPropertyService
     Task<List<AmenityResponseDto>> GetAllAmenities();
     Task<List<PropertyResponseDto>> FilterProperties(PropertyFilterParams filters);
     Task<PropertyResponseDto> RemoveAmenityAsync(Guid amenityId, Guid propertyId, Guid userId);
+    Task<List<PropertyResponseDto>> FilterByAmenitiesAsync(List<Guid> amenityIds, bool matchAll);
 }

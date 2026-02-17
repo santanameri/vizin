@@ -503,4 +503,63 @@ public class PropertyServiceTests
         Assert.That(ex.Message, Is.EqualTo("Erro ao processar a remoção."));
     }
 
+    //aqui
+    [Test]
+    public async Task FilterByAmenitiesAsync_ShouldThrowArgumentException_WhenAmenityIdsListIsEmpty()
+    {
+        // Arrange
+        var emptyList = new List<Guid>();
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.FilterByAmenitiesAsync(emptyList, false));
+        
+        // Validando a mensagem exata definida na sua service
+        Assert.That(ex.Message, Is.EqualTo("Nenhuma comodidade foi identificada."));
+    }
+
+    [Test]
+    public async Task FilterByAmenitiesAsync_ShouldReturnMappedDtos_WhenRepositoryReturnsProperties()
+    {
+        // Arrange
+        var amenityIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var matchAll = true;
+
+        var fakeProperties = new List<TbProperty>
+        {
+            new TbProperty { Id = Guid.NewGuid(), Title = "Propriedade 1" },
+            new TbProperty { Id = Guid.NewGuid(), Title = "Propriedade 2" }
+        };
+
+        _propertyRepoMock.Setup(r => r.GetPropertiesByAmenitiesAsync(amenityIds, matchAll))
+                         .ReturnsAsync(fakeProperties);
+
+        // Act
+        var result = await _service.FilterByAmenitiesAsync(amenityIds, matchAll);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result[0].Title, Is.EqualTo("Propriedade 1"));
+        
+        // Verifica se o repositório foi chamado com os parâmetros exatos
+        _propertyRepoMock.Verify(r => r.GetPropertiesByAmenitiesAsync(amenityIds, matchAll), Times.Once);
+    }
+
+    [Test]
+    public async Task FilterByAmenitiesAsync_ShouldReturnEmptyList_WhenNoPropertiesMatch()
+    {
+        // Arrange
+        var amenityIds = new List<Guid> { Guid.NewGuid() };
+        _propertyRepoMock.Setup(r => r.GetPropertiesByAmenitiesAsync(It.IsAny<List<Guid>>(), It.IsAny<bool>()))
+                         .ReturnsAsync(new List<TbProperty>());
+
+        // Act
+        var result = await _service.FilterByAmenitiesAsync(amenityIds, false);
+
+        // Assert
+        Assert.That(result, Is.Empty);
+        _propertyRepoMock.Verify(r => r.GetPropertiesByAmenitiesAsync(It.IsAny<List<Guid>>(), It.IsAny<bool>()), Times.Once);
+    }
+    //até aqui
 }

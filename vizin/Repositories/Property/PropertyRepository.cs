@@ -151,4 +151,26 @@ public class PropertyRepository : IPropertyRepository
 
         return property;
     }
+
+    public async Task<List<TbProperty>> GetPropertiesByAmenitiesAsync(List<Guid> amenityIds, bool matchAll)
+    {
+        var query = _context.TbProperties
+            .Include(p => p.Amenities)
+            .AsQueryable();
+
+        if (matchAll)
+        {
+            // Lógica: HAVING COUNT(pa.amenity_id) = total selecionado
+            query = query.Where(p => p.Amenities
+                .Count(a => amenityIds.Contains(a.Id)) == amenityIds.Count);
+        }
+        else
+        {
+            // Lógica: WHERE pa.amenity_id IN (...)
+            query = query.Where(p => p.Amenities
+                .Any(a => amenityIds.Contains(a.Id)));
+        }
+
+        return await query.ToListAsync();
+    }
 }

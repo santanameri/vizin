@@ -191,5 +191,24 @@ public class PropertyController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [Authorize(Policy = "HospedeOnly")]
+    [HttpGet("filter-amenities")]
+    public async Task<IActionResult> FilterByAmenities([FromQuery] List<Guid> amenityIds, [FromQuery] bool matchAll = false)
+    {
+        try
+        {
+            var result = await _service.FilterByAmenitiesAsync(amenityIds, matchAll);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao filtrar imóveis." });
+        }
+    }
     
 }
