@@ -192,4 +192,9 @@ public class PropertyRepository : IPropertyRepository
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<TbProperty?> GetByIdAsync(Guid id)
+    {
+        return await _context.TbProperties.FirstOrDefaultAsync(p => p.Id == id);
+    }
 }
