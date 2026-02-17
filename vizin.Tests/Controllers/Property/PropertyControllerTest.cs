@@ -400,5 +400,72 @@ public class PropertyControllerTests
         Assert.That(message, Is.EqualTo(errorMessage));
     }
 
+    [Test]
+    public async Task FilterByAmenities_ShouldReturnOk_WhenPropertiesExist()
+    {
+        // Arrange
+        var amenityIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var matchAll = true;
+        var expectedResult = new List<PropertyResponseDto> 
+        { 
+            new PropertyResponseDto { Id = Guid.NewGuid(), Title = "Imóvel Teste" } 
+        };
+
+        _serviceMock.Setup(s => s.FilterByAmenitiesAsync(amenityIds, matchAll))
+                    .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _controller.FilterByAmenities(amenityIds, matchAll);
+
+        // Assert
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null); // Substituindo IsNotNull por Assert.That
+        Assert.That(okResult.StatusCode, Is.EqualTo(200));
+        Assert.That(okResult.Value, Is.EqualTo(expectedResult));
+    }
+
+    [Test]
+    public async Task FilterByAmenities_ShouldReturnBadRequest_WhenArgumentExceptionIsThrown()
+    {
+        // Arrange
+        var amenityIds = new List<Guid>(); // Lista vazia
+        var errorMessage = "Ao menos uma comodidade deve ser selecionada.";
+        
+        _serviceMock.Setup(s => s.FilterByAmenitiesAsync(It.IsAny<List<Guid>>(), It.IsAny<bool>()))
+                    .ThrowsAsync(new ArgumentException(errorMessage));
+
+        // Act
+        var result = await _controller.FilterByAmenities(amenityIds, false);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+        Assert.That(badRequestResult, Is.Not.Null);
+        Assert.That(badRequestResult.StatusCode, Is.EqualTo(400));
+        
+        // Verifica se a mensagem de erro no JSON está correta
+        var jsonResponse = badRequestResult.Value;
+        var messageProp = jsonResponse.GetType().GetProperty("message").GetValue(jsonResponse, null);
+        Assert.That(messageProp, Is.EqualTo(errorMessage));
+    }
+
+    [Test]
+    public async Task FilterByAmenities_ShouldReturn500_WhenInternalErrorOccurs()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.FilterByAmenitiesAsync(It.IsAny<List<Guid>>(), It.IsAny<bool>()))
+                    .ThrowsAsync(new Exception("Erro de banco"));
+
+        // Act
+        var result = await _controller.FilterByAmenities(new List<Guid> { Guid.NewGuid() }, false);
+
+        // Assert
+        var statusCodeResult = result as ObjectResult;
+        Assert.That(statusCodeResult, Is.Not.Null);
+        Assert.That(statusCodeResult.StatusCode, Is.EqualTo(500));
+        
+        var jsonResponse = statusCodeResult.Value;
+        var messageProp = jsonResponse.GetType().GetProperty("message").GetValue(jsonResponse, null);
+        Assert.That(messageProp, Is.EqualTo("Erro interno ao filtrar imóveis."));
+    }
 
 }

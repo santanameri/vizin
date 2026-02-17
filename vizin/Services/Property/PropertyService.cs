@@ -184,4 +184,15 @@ public class PropertyService : IPropertyService
 
         return updatedProperty.ToDto();
     }
+    public async Task<List<PropertyResponseDto>> FilterByAmenitiesAsync(List<Guid> amenityIds, bool matchAll)
+    {
+        if (amenityIds == null || !amenityIds.Any())
+            throw new ArgumentException("Nenhuma comodidade foi identificada.");
+
+        // Chama o repositório para fazer o filtro no banco
+        var properties = await _propertyRepository.GetPropertiesByAmenitiesAsync(amenityIds, matchAll);
+        
+        // Converte a lista de modelos para DTOs antes de retornar para a Controller
+        return properties.Select(p => p.ToDto()).ToList();
+    }
 }
