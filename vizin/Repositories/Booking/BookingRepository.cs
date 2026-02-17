@@ -36,4 +36,22 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync();
         return booking;
     }
+
+    public async Task<List<TbBooking>> GetHostBookingsAsync(Guid hostId)
+{
+    return await _context.TbBookings
+        .Include(b => b.Property)
+        .Where(b => b.Property.UserId == hostId) // O imóvel pertence ao anfitrião
+        .OrderByDescending(b => b.CheckinDate)
+        .ToListAsync();
+}
+
+    public async Task<List<TbBooking>> GetGuestBookingsAsync(Guid guestId)
+    {
+        return await _context.TbBookings
+            .Include(b => b.Property)
+            .Where(b => b.UserId == guestId) // A reserva foi feita por este hóspede
+            .OrderByDescending(b => b.CheckinDate)
+            .ToListAsync();
+    }
 }

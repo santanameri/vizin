@@ -48,4 +48,33 @@ public class BookingService : IBookingService
         return BookingMapper.ToDto(created, property);
         
     }
+
+    public async Task<BookingHistoryDto> GetUserBookingHistoryAsync(Guid userId, string role)
+    {
+        List<TbBooking> bookings;
+        
+        if (role == "Anfitriao") // Ajuste conforme o nome exato da sua Policy/Role
+            bookings = await _bookingRepo.GetHostBookingsAsync(userId);
+        else
+            bookings = await _bookingRepo.GetGuestBookingsAsync(userId);
+
+        var today = DateTime.Today;
+
+        var history = new BookingHistoryDto
+        {
+            // Em andamento: data_inicio <= hoje E data_fim >= hoje
+            Ongoing = bookings
+                .Where(b => b.CheckinDate.Date <= today && b.CheckoutDate.Date >= today)
+                .Select(b => BookingMapper.ToDto(b, b.Property))
+                .ToList(),
+
+            // Anteriores: data_fim < hoje
+            Past = bookings
+                .Where(b => b.CheckoutDate.Date < today)
+                .Select(b => BookingMapper.ToDto(b, b.Property))
+                .ToList()
+        };
+
+        return history;
+    }
 }

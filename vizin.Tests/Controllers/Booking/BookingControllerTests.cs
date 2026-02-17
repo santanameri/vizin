@@ -79,4 +79,75 @@ public class BookingControllerTests
         dynamic value = badRequest.Value;
         Assert.That(value.GetType().GetProperty("message").GetValue(value, null), Is.EqualTo(errorMessage));
     }
+
+    [Test]
+    public async Task GetMyBookings_ShouldReturnOk_WithHistory()
+    {
+        // Arrange: Configura uma role para o usuário no contexto do teste
+        var role = "Hospede";
+        var identity = (ClaimsIdentity)_controller.HttpContext.User.Identity!;
+        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+
+        var expectedHistory = new BookingHistoryDto
+        {
+            Ongoing = new List<BookingResponseDto>(),
+            Past = new List<BookingResponseDto>()
+        };
+
+        _serviceMock.Setup(s => s.GetUserBookingHistoryAsync(_userId, role))
+            .ReturnsAsync(expectedHistory);
+
+        // Act
+        var result = await _controller.GetMyBookings();
+
+        // Assert
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult.StatusCode, Is.EqualTo(200));
+        Assert.That(okResult.Value, Is.EqualTo(expectedHistory));
+        
+        // Verifica se o serviço foi chamado com o ID e a Role corretos extraídos do token
+        _serviceMock.Verify(s => s.GetUserBookingHistoryAsync(_userId, role), Times.Once);
+    }
+
+    [Test]
+    public async Task GetMyBookings_WhenUserIsAnfitriao_ShouldPassCorrectRoleToService()
+    {
+        // Arrange: Simula o cenário de Anfitrião
+        var role = "Anfitriao";
+        var identity = (ClaimsIdentity)_controller.HttpContext.User.Identity!;
+        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+
+        var expectedHistory = new BookingHistoryDto();
+
+        _serviceMock.Setup(s => s.GetUserBookingHistoryAsync(_userId, role))
+            .ReturnsAsync(expectedHistory);
+
+        // Act
+        var result = await _controller.GetMyBookings();
+
+        // Assert
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        _serviceMock.Verify(s => s.GetUserBookingHistoryAsync(_userId, role), Times.Once);
+    }
+
+    [Test]
+    public async Task GetMyBookings_WhenRoleIsMissing_ShouldPassNullRoleToService()
+    {
+        // Arrange: O Setup padrão já tem o NameIdentifier, mas não tem a Role
+        _serviceMock.Setup(s => s.GetUserBookingHistoryAsync(_userId, null))
+            .ReturnsAsync(new BookingHistoryDto());
+
+        // Act
+        var result = await _controller.GetMyBookings();
+
+        // Assert
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        
+        // Verifica se passou null quando a claim de role não existe
+        _serviceMock.Verify(s => s.GetUserBookingHistoryAsync(_userId, null), Times.Once);
+    }
+
 }
