@@ -1,3 +1,4 @@
+using vizin.DTO.Booking;
 using vizin.Repositories.User;
 using vizin.DTO.Property;
 using vizin.DTO.Property.Amenity;
@@ -184,6 +185,7 @@ public class PropertyService : IPropertyService
 
         return updatedProperty.ToDto();
     }
+    
     public async Task<List<PropertyResponseDto>> FilterByAmenitiesAsync(List<Guid> amenityIds, bool matchAll)
     {
         if (amenityIds == null || !amenityIds.Any())
@@ -195,4 +197,14 @@ public class PropertyService : IPropertyService
         // Converte a lista de modelos para DTOs antes de retornar para a Controller
         return properties.Select(p => p.ToDto()).ToList();
     }
+    
+    public async Task<List<PropertyResponseDto>> GetAvailableProperties(AvailabilityFilterDto filter)
+    {
+        if (filter.CheckIn < DateTime.Today) throw new Exception("Data de check-in inválida");
+        if (filter.CheckOut <= filter.CheckIn) throw new Exception("Check-out deve ser após o check-in");
+
+        var properties = await _propertyRepository.GetAvailablePropertiesAsync(filter.CheckIn, filter.CheckOut);
+        
+        return properties.Select(p => p.ToDto()).ToList();
+    } 
 }

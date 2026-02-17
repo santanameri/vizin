@@ -1,4 +1,5 @@
 using Moq;
+using vizin.DTO.Booking;
 using vizin.DTO.Property;
 using vizin.Models;
 using vizin.Repositories.Property.Interfaces;
@@ -561,5 +562,86 @@ public class PropertyServiceTests
         Assert.That(result, Is.Empty);
         _propertyRepoMock.Verify(r => r.GetPropertiesByAmenitiesAsync(It.IsAny<List<Guid>>(), It.IsAny<bool>()), Times.Once);
     }
-    //até aqui
+    
+    [Test]
+    public async Task GetAvailableProperties_Success_ShouldReturnMappedDtos()
+    {
+        // Arrange
+        var filter = new AvailabilityFilterDto 
+        { 
+            CheckIn = DateTime.UtcNow.AddDays(1), 
+            CheckOut = DateTime.UtcNow.AddDays(5) 
+        };
+
+        var fakeProperties = new List<TbProperty> 
+        { 
+            new TbProperty { Id = Guid.NewGuid(), Title = "Casa Ativa", Availability = true } 
+        };
+
+        _propertyRepoMock.Setup(r => r.GetAvailablePropertiesAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            .ReturnsAsync(fakeProperties);
+
+        // Act
+        var result = await _service.GetAvailableProperties(filter);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].Title, Is.EqualTo("Casa Ativa"));
+    }
+
+    [Test]
+    public void GetAvailableProperties_CheckInInPast_ShouldThrowException()
+    {
+        // Arrange
+        var filter = new AvailabilityFilterDto { CheckIn = DateTime.UtcNow.AddDays(-1) };
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(async () => 
+            await _service.GetAvailableProperties(filter));
+        
+        Assert.That(ex.Message, Is.EqualTo("Data de check-in inválida"));
+    }
+
+    [Test]
+    public void GetAvailableProperties_InvalidDateRange_ShouldThrowException()
+    {
+        // Arrange: Check-out antes do Check-in
+        var filter = new AvailabilityFilterDto 
+        { 
+            CheckIn = DateTime.UtcNow.AddDays(5), 
+            CheckOut = DateTime.UtcNow.AddDays(2) 
+        };
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(async () => 
+            await _service.GetAvailableProperties(filter));
+        
+        Assert.That(ex.Message, Is.EqualTo("Check-out deve ser após o check-in"));
+    }
+    
+    [Test]
+    public async Task GetAvailableProperties_WhenPropertyIsReserved_ShouldReturnEmptyList()
+    {
+        // Arrange: Datas que o usuário quer buscar
+        var filter = new AvailabilityFilterDto 
+        { 
+            CheckIn = DateTime.UtcNow.AddDays(10), 
+            CheckOut = DateTime.UtcNow.AddDays(15) 
+        };
+
+        // Simulamos que o Repositório (que executa aquele SQL com LEFT JOIN/NOT EXISTS) 
+        // não encontrou nenhum imóvel disponível para esse período específico.
+        _propertyRepoMock.Setup(r => r.GetAvailablePropertiesAsync(filter.CheckIn, filter.CheckOut))
+            .ReturnsAsync(new List<TbProperty>()); // Retorna lista vazia
+
+        // Act
+        var result = await _service.GetAvailableProperties(filter);
+
+        // Assert
+        Assert.That(result, Is.Empty, "A lista deveria estar vazia pois o imóvel está reservado no período.");
+    
+        // Verifica se o repositório foi chamado exatamente com as datas do filtro
+        _propertyRepoMock.Verify(r => r.GetAvailablePropertiesAsync(filter.CheckIn, filter.CheckOut), Times.Once);
+    }
 }

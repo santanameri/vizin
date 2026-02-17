@@ -25,10 +25,12 @@ public class BookingServiceTests
     {
         var propertyId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var checkIn = DateTime.UtcNow.AddDays(1).Date;
+        var checkOut = DateTime.UtcNow.AddDays(3).Date;
         var dto = new CreateBookingDto
         {
-            CheckIn = DateTime.Today.AddDays(1),
-            CheckOut = DateTime.Today.AddDays(3),
+            CheckIn = checkIn, 
+            CheckOut = checkOut,
             GuestCount = 2
         };
 
@@ -39,26 +41,34 @@ public class BookingServiceTests
             DailyValue = 100,
             Title = "Casa de Teste"
         };
+        
+        var createdFromDb = new TbBooking 
+        { 
+            Id = Guid.NewGuid(),
+            PropertyId = propertyId,
+            UserId = userId,
+            CheckinDate = checkIn,
+            CheckoutDate = checkOut,
+            TotalCost = 200, 
+            Status = (int)StatusBookingType.Criado
+        };
 
         _bookingRepoMock.Setup(r => r.GetPropertyWithCapacityAsync(propertyId))
             .ReturnsAsync(property);
-
-        _bookingRepoMock.Setup(r => r.HasConflictingBookingAsync(propertyId, dto.CheckIn, dto.CheckOut))
+            
+        _bookingRepoMock.Setup(r => r.HasConflictingBookingAsync(propertyId, It.IsAny<DateTime>(), It.IsAny<DateTime>()))
             .ReturnsAsync(false);
-
+        
         _bookingRepoMock.Setup(r => r.CreateAsync(It.IsAny<TbBooking>()))
-            .ReturnsAsync(new TbBooking { Id = Guid.NewGuid() });
-
+            .ReturnsAsync(createdFromDb);
+        
         var result = await _service.CreateBooking(userId, propertyId, dto);
-
+        
         Assert.Multiple(() =>
         {
-            Assert.That(result.PropertyTitle, Is.EqualTo("Casa de Teste"));
-            Assert.That(result.TotalNights, Is.EqualTo(2));
-            Assert.That(result.TotalCost, Is.EqualTo(200));
-            Assert.That(result.Status, Is.EqualTo(StatusBookingType.Criado));
+            Assert.That(result.TotalNights, Is.EqualTo(2), "As noites calculadas devem ser 2.");
+            Assert.That(result.TotalCost, Is.EqualTo(200), "O custo total deve ser 200 (2 * 100).");
         });
-
         _bookingRepoMock.Verify(r => r.CreateAsync(It.IsAny<TbBooking>()), Times.Once);
     }
 

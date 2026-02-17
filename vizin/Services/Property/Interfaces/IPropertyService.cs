@@ -1,3 +1,4 @@
+using vizin.DTO.Booking;
 using vizin.DTO.Property;
 using vizin.DTO.Property.Amenity;
 
@@ -15,4 +16,6 @@ public interface IPropertyService
     Task<List<PropertyResponseDto>> FilterProperties(PropertyFilterParams filters);
     Task<PropertyResponseDto> RemoveAmenityAsync(Guid amenityId, Guid propertyId, Guid userId);
     Task<List<PropertyResponseDto>> FilterByAmenitiesAsync(List<Guid> amenityIds, bool matchAll);
+    Task<List<PropertyResponseDto>> GetAvailableProperties(AvailabilityFilterDto filter);
+
 }

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using vizin.DTO.Booking;
 using vizin.DTO.Property;
 using vizin.DTO.Property.Amenity;
 using vizin.Services.Property.Interfaces;
@@ -37,6 +38,21 @@ public class PropertyController : ControllerBase
         }
            
         return Ok(properties);
+    }
+    
+    [Authorize(Policy = "HospedeOnly")]
+    [HttpGet("availability")]
+    public async Task<IActionResult> GetAvailability([FromQuery] AvailabilityFilterDto filter)
+    {
+        try 
+        {
+            var available = await _service.GetAvailableProperties(filter);
+            return Ok(available);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
     
     [Authorize(Policy = "AnfitriaoOnly")]

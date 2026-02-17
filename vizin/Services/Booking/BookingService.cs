@@ -29,7 +29,7 @@ public class BookingService : IBookingService
         var isOccupied = await _bookingRepo.HasConflictingBookingAsync(propertyId, dto.CheckIn, dto.CheckOut);
         if (isOccupied) throw new Exception("Já reservado para este período.");
         
-        var totalNights = (dto.CheckOut - dto.CheckIn).Days;
+        var totalNights = (dto.CheckOut.Date - dto.CheckIn.Date).Days;
         if (totalNights <=0) totalNights = 1;
         
         TbBooking newBooking = new TbBooking
@@ -39,21 +39,13 @@ public class BookingService : IBookingService
             CheckinDate = dto.CheckIn,
             CheckoutDate = dto.CheckOut,
             GuestCount = dto.GuestCount,
-            TotalCost = totalNights * property.DailyValue
+            TotalCost = totalNights * property.DailyValue,
+            Status = (int)StatusBookingType.Criado
         };
         
         TbBooking created = await _bookingRepo.CreateAsync(newBooking);
         
-        return new BookingResponseDto()
-        {
-            Id = created.Id,
-            PropertyTitle = property.Title,
-            CheckIn = dto.CheckIn,
-            CheckOut = dto.CheckOut,
-            TotalNights = totalNights,
-            Status = StatusBookingType.Criado,
-            TotalCost = totalNights * property.DailyValue
-        };
+        return BookingMapper.ToDto(created, property);
         
     }
 }

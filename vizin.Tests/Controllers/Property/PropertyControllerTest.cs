@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Microsoft.AspNetCore.Mvc;
 using vizin.Controllers.Property;
+using vizin.DTO.Booking;
 using vizin.Services.Property.Interfaces;
 using vizin.DTO.Property;
 using vizin.DTO.Property.Amenity;
@@ -467,5 +468,40 @@ public class PropertyControllerTests
         var messageProp = jsonResponse.GetType().GetProperty("message").GetValue(jsonResponse, null);
         Assert.That(messageProp, Is.EqualTo("Erro interno ao filtrar imóveis."));
     }
+    
+    [Test]
+    public async Task GetAvailability_Success_ShouldReturnOkWithList()
+    {
+        // Arrange
+        var filter = new AvailabilityFilterDto { CheckIn = DateTime.UtcNow, CheckOut = DateTime.UtcNow.AddDays(1) };
+        var expectedList = new List<PropertyResponseDto> { new PropertyResponseDto { Title = "Casa de Teste" } };
 
+        _serviceMock.Setup(s => s.GetAvailableProperties(filter))
+            .ReturnsAsync(expectedList);
+
+        // Act
+        var result = await _controller.GetAvailability(filter);
+
+        // Assert
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult.Value, Is.EqualTo(expectedList));
+    }
+
+    [Test]
+    public async Task GetAvailability_WhenExceptionOccurs_ShouldReturnBadRequest()
+    {
+        var filter = new AvailabilityFilterDto();
+        _serviceMock.Setup(s => s.GetAvailableProperties(It.IsAny<AvailabilityFilterDto>()))
+            .ThrowsAsync(new Exception("Data inválida"));
+        
+        var result = await _controller.GetAvailability(filter);
+        
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+        var badRequest = result as BadRequestObjectResult;
+        
+
+        dynamic value = badRequest.Value;
+        Assert.That(value.GetType().GetProperty("message").GetValue(value, null), Is.EqualTo("Data inválida"));
+    }
 }

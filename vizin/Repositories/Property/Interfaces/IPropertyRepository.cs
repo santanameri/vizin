@@ -17,4 +17,5 @@ public interface IPropertyRepository
     Task<List<TbProperty>> SearchWithFiltersAsync(PropertyFilterParams filters);
     Task<TbProperty?> RemoveAmenityAsync(Guid amenityId, Guid propertyId);
     Task<List<TbProperty>> GetPropertiesByAmenitiesAsync(List<Guid> amenityIds, bool matchAll);
+    Task<List<TbProperty>> GetAvailablePropertiesAsync(DateTime checkIn, DateTime checkOut);
 }

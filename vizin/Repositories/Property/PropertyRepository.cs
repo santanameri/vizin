@@ -173,4 +173,23 @@ public class PropertyRepository : IPropertyRepository
 
         return await query.ToListAsync();
     }
+    
+    public async Task<List<TbProperty>> GetAvailablePropertiesAsync(DateTime checkIn, DateTime checkOut)
+    {
+        var utcCheckIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
+        var utcCheckOut = DateTime.SpecifyKind(checkOut, DateTimeKind.Utc);
+        
+        return await _context.TbProperties
+            .FromSqlInterpolated($@"
+            SELECT DISTINCT p.* FROM sistema_locacao.tb_property p
+            LEFT JOIN sistema_locacao.tb_booking b ON p.id = b.property_id 
+                AND b.status != 3
+                AND {utcCheckIn} < b.checkout_date 
+                AND {utcCheckOut} > b.checkin_date
+            WHERE b.id IS NULL
+        ")
+            .Include(p => p.Amenities)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
