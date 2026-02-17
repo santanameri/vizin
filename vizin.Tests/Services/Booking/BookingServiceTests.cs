@@ -12,12 +12,14 @@ public class BookingServiceTests
 {
     private Mock<IBookingRepository> _bookingRepoMock;
     private BookingService _service;
+    private Guid _userId; //esse
 
     [SetUp]
     public void SetUp()
     {
         _bookingRepoMock = new Mock<IBookingRepository>();
         _service = new BookingService(_bookingRepoMock.Object);
+        _userId = Guid.NewGuid(); //esse
     }
 
     [Test]
@@ -169,5 +171,92 @@ public class BookingServiceTests
             await _service.CreateBooking(Guid.NewGuid(), propertyId, dto));
 
         Assert.That(ex.Message, Is.EqualTo("Imóvel inexistente."));
+    }
+
+    //aqui
+    [Test]
+    public async Task GetUserBookingHistoryAsync_WhenRoleIsAnfitriao_ShouldCallHostRepository()
+    {
+        // Arrange
+        var role = "Anfitriao";
+        _bookingRepoMock.Setup(r => r.GetHostBookingsAsync(_userId))
+            .ReturnsAsync(new List<TbBooking>());
+
+        // Act
+        await _service.GetUserBookingHistoryAsync(_userId, role);
+
+        // Assert
+        _bookingRepoMock.Verify(r => r.GetHostBookingsAsync(_userId), Times.Once);
+        _bookingRepoMock.Verify(r => r.GetGuestBookingsAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Test]
+    public async Task GetUserBookingHistoryAsync_WhenRoleIsHospede_ShouldCallGuestRepository()
+    {
+        // Arrange
+        var role = "Hospede";
+        _bookingRepoMock.Setup(r => r.GetGuestBookingsAsync(_userId))
+            .ReturnsAsync(new List<TbBooking>());
+
+        // Act
+        await _service.GetUserBookingHistoryAsync(_userId, role);
+
+        // Assert
+        _bookingRepoMock.Verify(r => r.GetGuestBookingsAsync(_userId), Times.Once);
+        _bookingRepoMock.Verify(r => r.GetHostBookingsAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Test]
+    public async Task GetUserBookingHistoryAsync_ShouldDistributeBookingsCorrectlyByDate()
+    {
+        // Arrange
+        var today = DateTime.Today;
+        var property = new TbProperty { Title = "Imóvel Teste", DailyValue = 100 };
+        
+        var bookings = new List<TbBooking>
+        {
+            // Reserva Em Andamento (Iniciou ontem, termina amanhã)
+            new TbBooking { 
+                Id = Guid.NewGuid(), 
+                CheckinDate = today.AddDays(-1), 
+                CheckoutDate = today.AddDays(1), 
+                Property = property,
+                Status = 1
+            },
+            // Reserva Anterior (Terminou ontem)
+            new TbBooking { 
+                Id = Guid.NewGuid(), 
+                CheckinDate = today.AddDays(-5), 
+                CheckoutDate = today.AddDays(-1), 
+                Property = property,
+                Status = 1
+            },
+            // Reserva Futura (Não deve aparecer em 'Past', mas sim em 'Ongoing' se o checkin for hoje)
+            new TbBooking { 
+                Id = Guid.NewGuid(), 
+                CheckinDate = today, 
+                CheckoutDate = today.AddDays(2), 
+                Property = property,
+                Status = 1
+            }
+        };
+
+        _bookingRepoMock.Setup(r => r.GetGuestBookingsAsync(_userId))
+            .ReturnsAsync(bookings);
+
+        // Act
+        var result = await _service.GetUserBookingHistoryAsync(_userId, "Hospede");
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            // Esperamos 2 reservas em Ongoing (a que começou ontem e a que começa hoje)
+            Assert.That(result.Ongoing.Count, Is.EqualTo(2), "Deveria haver 2 reservas em andamento");
+            // Esperamos 1 reserva em Past (a que terminou ontem)
+            Assert.That(result.Past.Count, Is.EqualTo(1), "Deveria haver 1 reserva anterior");
+            
+            Assert.That(result.Ongoing.Any(b => b.CheckOut < today), Is.False, "Nenhuma reserva em Ongoing deveria ter terminado antes de hoje");
+            Assert.That(result.Past.All(b => b.CheckOut < today), Is.True, "Todas as reservas em Past devem ter data de fim menor que hoje");
+        });
     }
 }

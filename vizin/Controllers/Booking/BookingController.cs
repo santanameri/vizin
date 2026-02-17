@@ -36,4 +36,19 @@ public class BookingController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [Authorize] 
+    [HttpGet("my-bookings")]
+    public async Task<IActionResult> GetMyBookings()
+    {
+        // O código interno vai identificar quem é o usuário pelo Token
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        
+        // Captura a Role (Papel) do usuário. 
+        // Certifique-se de que o nome da Claim de Role seja o mesmo usado no seu login.
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value; 
+
+        var history = await _service.GetUserBookingHistoryAsync(userId, userRole);
+        return Ok(history);
+    }
 }

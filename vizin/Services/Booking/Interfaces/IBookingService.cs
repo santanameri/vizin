@@ -6,4 +6,5 @@ namespace vizin.Services.Booking.Interfaces;
 public interface IBookingService
 {
     Task<BookingResponseDto> CreateBooking(Guid userId, Guid propertyId, CreateBookingDto dto);
+    Task<BookingHistoryDto> GetUserBookingHistoryAsync(Guid userId, string role);
 }
