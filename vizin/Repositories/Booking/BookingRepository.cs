@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using vizin.Models;
+using vizin.Models.Enum;
 using vizin.Repositories.Booking.Interfaces;
 using vizin.Repositories.Property.Interfaces;
 
