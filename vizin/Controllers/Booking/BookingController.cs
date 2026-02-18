@@ -66,4 +66,24 @@ public class BookingController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    
+    [HttpGet("report")]
+    [Authorize(Policy = "AnfitriaoOnly")] // Garante que só anfitrião acessa
+    public async Task<IActionResult> DownloadReport()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var hostId = Guid.Parse(userIdClaim);
+
+            var fileBytes = await _service.GenerateHostReportAsync(hostId);
+        
+            // Retorna o arquivo com o nome personalizado
+            return File(fileBytes, "text/csv", $"relatorio_reservas_{DateTime.Now:yyyyMMdd}.csv");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

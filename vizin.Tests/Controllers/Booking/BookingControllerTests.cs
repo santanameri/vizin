@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -200,6 +201,23 @@ public class BookingControllerTests
             Times.Once
         );
     }
+    
+    [Test]
+    public async Task DownloadReport_ReturnsFileResult()
+    {
+        // Arrange
+        var hostId = Guid.NewGuid();
+        var fileContent = Encoding.UTF8.GetBytes("Header;Data");
+        _serviceMock.Setup(s => s.GenerateHostReportAsync(It.IsAny<Guid>())).ReturnsAsync(fileContent);
 
+        // Act
+        var result = await _controller.DownloadReport();
+
+        // Assert
+        Assert.That(result, Is.TypeOf<FileContentResult>());
+        var fileResult = result as FileContentResult;
+        Assert.That(fileResult.ContentType, Is.EqualTo("text/csv"));
+        Assert.That(fileResult.FileDownloadName, Does.Contain(".csv"));
+    }
 
 }

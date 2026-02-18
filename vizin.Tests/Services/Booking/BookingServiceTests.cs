@@ -1,3 +1,4 @@
+using System.Text;
 using Moq;
 using vizin.DTO.Booking;
 using vizin.Models;
@@ -379,6 +380,40 @@ public class BookingServiceTests
         Assert.That(booking.CancelationDate, Is.Not.Null);
 
         _bookingRepoMock.Verify(r => r.UpdateAsync(booking), Times.Once);
+    }
+    [Test]
+    public async Task GenerateHostReport_Success_ShouldReturnValidCsvContent()
+    {
+        // Arrange
+        var hostId = Guid.NewGuid();
+        var bookings = new List<TbBooking>
+        {
+            new TbBooking 
+            { 
+                TotalCost = 500, 
+                CheckinDate = new DateTime(2026, 3, 1),
+                CheckoutDate = new DateTime(2026, 3, 5),
+                Property = new TbProperty { Title = "Casa de Praia" },
+                User = new TbUser { Name = "Lis Isabelle" },
+                Status = 4 // Finalizado
+            }
+        };
+
+        _bookingRepoMock.Setup(r => r.GetBookingsByHostIdAsync(hostId)).ReturnsAsync(bookings);
+
+        // Act
+        var result = await _service.GenerateHostReportAsync(hostId);
+        var csvString = Encoding.UTF8.GetString(result);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Not.Null);
+            Assert.That(csvString, Does.Contain("Imovel;Hospede;CheckIn;CheckOut;Valor;Status")); // Cabeçalho
+            Assert.That(csvString, Does.Contain("Casa de Praia")); // Dados
+            Assert.That(csvString, Does.Contain("Lis Isabelle"));
+            Assert.That(csvString, Does.Contain("500"));
+        });
     }
 
 }
