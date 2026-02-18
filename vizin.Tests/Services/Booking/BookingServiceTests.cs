@@ -173,7 +173,6 @@ public class BookingServiceTests
         Assert.That(ex.Message, Is.EqualTo("Imóvel inexistente."));
     }
 
-    //aqui
     [Test]
     public async Task GetUserBookingHistoryAsync_WhenRoleIsAnfitriao_ShouldCallHostRepository()
     {
@@ -259,4 +258,127 @@ public class BookingServiceTests
             Assert.That(result.Past.All(b => b.CheckOut < today), Is.True, "Todas as reservas em Past devem ter data de fim menor que hoje");
         });
     }
+
+    //aqui
+    [Test]
+    public void CancelBookingAsync_DeveLancarExcecao_QuandoReservaNaoEncontrada()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        _bookingRepoMock
+            .Setup(r => r.GetByIdAsync(bookingId))
+            .Returns(Task.FromResult<TbBooking?>(null));
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.CancelBookingAsync(bookingId, _userId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Reserva não encontrada."));
+    }
+
+    [Test]
+    public void CancelBookingAsync_DeveLancarExcecao_QuandoUsuarioNaoForDono()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        var booking = new TbBooking
+        {
+            Id = bookingId,
+            UserId = Guid.NewGuid(),
+            Status = 1
+        };
+
+        _bookingRepoMock
+            .Setup(r => r.GetByIdAsync(bookingId))
+            .ReturnsAsync(booking);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.CancelBookingAsync(bookingId, _userId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Acesso negado."));
+    }
+
+    [Test]
+    public void CancelBookingAsync_DeveLancarExcecao_QuandoReservaJaCancelada()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        var booking = new TbBooking
+        {
+            Id = bookingId,
+            UserId = _userId,
+            Status = 3
+        };
+
+        _bookingRepoMock
+            .Setup(r => r.GetByIdAsync(bookingId))
+            .ReturnsAsync(booking);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.CancelBookingAsync(bookingId, _userId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Reserva já está cancelada."));
+    }
+
+    [Test]
+    public void CancelBookingAsync_DeveLancarExcecao_QuandoReservaFinalizada()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        var booking = new TbBooking
+        {
+            Id = bookingId,
+            UserId = _userId,
+            Status = 4
+        };
+
+        _bookingRepoMock
+            .Setup(r => r.GetByIdAsync(bookingId))
+            .ReturnsAsync(booking);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<Exception>(() =>
+            _service.CancelBookingAsync(bookingId, _userId));
+
+        Assert.That(ex!.Message, Is.EqualTo("Não é possível cancelar uma reserva finalizada."));
+    }
+
+    [Test]
+    public async Task CancelBookingAsync_DeveCancelarReserva_QuandoDadosValidos()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        var booking = new TbBooking
+        {
+            Id = bookingId,
+            UserId = _userId,
+            Status = 1
+        };
+
+        _bookingRepoMock
+            .Setup(r => r.GetByIdAsync(bookingId))
+            .ReturnsAsync(booking);
+
+        _bookingRepoMock
+            .Setup(r => r.UpdateAsync(It.IsAny<TbBooking>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.CancelBookingAsync(bookingId, _userId);
+
+        // Assert
+        Assert.That(result, Is.True);
+        Assert.That(booking.Status, Is.EqualTo(3));
+        Assert.That(booking.CancelationDate, Is.Not.Null);
+
+        _bookingRepoMock.Verify(r => r.UpdateAsync(booking), Times.Once);
+    }
+
 }
