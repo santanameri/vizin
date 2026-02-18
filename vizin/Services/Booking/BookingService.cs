@@ -1,3 +1,4 @@
+using System.Text;
 using vizin.DTO.Booking;
 using vizin.Models;
 using vizin.Models.Enum;
@@ -98,4 +99,25 @@ public class BookingService : IBookingService
         await _bookingRepo.UpdateAsync(booking);
         return true;
     }
+    
+    public async Task<byte[]> GenerateHostReportAsync(Guid hostId)
+    {
+        // 1. Busca as reservas onde o dono do imóvel é o hostId
+        var bookings = await _bookingRepo.GetBookingsByHostIdAsync(hostId);
+
+        // 2. Monta o cabeçalho do CSV
+        var csv = new StringBuilder();
+        csv.AppendLine("Imovel;Hospede;CheckIn;CheckOut;Valor;Status");
+
+        // 3. Preenche as linhas
+        foreach (var b in bookings)
+        {
+            var propertyTitle = b.Property?.Title ?? "Imóvel s/ Nome";
+            var guestName = b.User?.Name ?? "Hóspede s/ Nome";
+            csv.AppendLine($"{b.Property.Title};{b.User.Name};{b.CheckinDate:dd/MM/yyyy};{b.CheckoutDate:dd/MM/yyyy};{b.TotalCost};{((StatusBookingType)b.Status)}");
+        }
+
+        // 4. Converte para array de bytes (UTF-8 com BOM para o Excel ler acentos)
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+    } 
 }

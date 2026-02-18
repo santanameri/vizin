@@ -67,4 +67,14 @@ public class BookingRepository : IBookingRepository
         _context.Entry(booking).State = EntityState.Modified;
         await _context.SaveChangesAsync();
     }
+    
+    public async Task<IEnumerable<TbBooking>> GetBookingsByHostIdAsync(Guid hostId)
+    {
+        return await _context.TbBookings
+            .Include(b => b.User)        // Traz os dados do Hóspede (nome, etc)
+            .Include(b => b.Property)    // Traz os dados do Imóvel (título, preço)
+            .Where(b => b.Property.UserId == hostId) // O filtro é pelo dono do imóvel
+            .OrderByDescending(b => b.CheckinDate)   // Reservas mais recentes primeiro
+            .ToListAsync();
+    }
 }
