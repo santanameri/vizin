@@ -78,4 +78,35 @@ public class PaymentControllerTests
         // Verifica se a mensagem de erro da Service foi repassada para o cliente
         Assert.That(badRequest.Value.ToString(), Does.Contain("Reserva não encontrada."));
     }
+
+    [Test]
+    public async Task Pay_UserNotIdentified_ReturnsUnauthorized()
+    {
+        // Arrange: Removemos os Claims do contexto para simular usuário deslogado
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act
+        var result = await _controller.Pay(Guid.NewGuid(), new PaymentRequestDto());
+
+        // Assert: Cobre a branch 'if (string.IsNullOrEmpty(userIdClaim))'
+        Assert.That(result, Is.TypeOf<UnauthorizedObjectResult>());
+    }
+
+    [Test]
+    public async Task Pay_PaymentRefused_ReturnsBadRequest()
+    {
+        // Arrange: Simula a Service retornando Success = false (sem lançar Exception)
+        var responseDto = new PaymentResponseDto { Success = false, Status = "Cartão Recusado" };
+        
+        _paymentServiceMock.Setup(s => s.ProcessPaymentAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<PaymentRequestDto>()))
+                        .ReturnsAsync(responseDto);
+
+        // Act
+        var result = await _controller.Pay(Guid.NewGuid(), new PaymentRequestDto());
+
+        // Assert: Cobre a branch 'if (!response.Success)'
+        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
+        var badRequest = result as BadRequestObjectResult;
+        Assert.That(badRequest.Value, Is.EqualTo(responseDto));
+    }
 }

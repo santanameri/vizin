@@ -56,4 +56,54 @@ public class ReviewControllerTests
         // Assert
         Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
     }
+
+    [Test]
+    public async Task Create_UserClaimMissing_ReturnsUnauthorized()
+    {
+        // Arrange: Removemos o usuário do contexto para simular ausência de Claim
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act
+        var result = await _controller.Create(Guid.NewGuid(), new ReviewRequestDto());
+
+        // Assert
+        Assert.That(result, Is.TypeOf<UnauthorizedResult>());
+    }
+
+    [Test]
+    public async Task Create_ServiceThrowsException_ReturnsBadRequest()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.CreateBookingReviewAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ReviewRequestDto>()))
+            .ThrowsAsync(new Exception("Erro genérico"));
+
+        // Act
+        var result = await _controller.Create(Guid.NewGuid(), new ReviewRequestDto());
+
+        // Assert
+        Assert.That(result, Is.TypeOf<BadRequestObjectResult>());
+    }
+
+    [Test]
+    public async Task Delete_UserClaimMissing_ReturnsUnauthorized()
+    {
+        // Arrange
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act
+        var result = await _controller.Delete(Guid.NewGuid());
+
+        // Assert
+        Assert.That(result, Is.TypeOf<UnauthorizedResult>());
+    }
+
+    [Test]
+    public async Task Delete_ValidRequest_ReturnsOk()
+    {
+        // Act
+        var result = await _controller.Delete(Guid.NewGuid());
+
+        // Assert
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+    }
 }

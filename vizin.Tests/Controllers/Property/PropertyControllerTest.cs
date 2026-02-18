@@ -468,6 +468,65 @@ public class PropertyControllerTests
         var messageProp = jsonResponse.GetType().GetProperty("message").GetValue(jsonResponse, null);
         Assert.That(messageProp, Is.EqualTo("Erro interno ao filtrar imóveis."));
     }
+
+    [Test]
+    public async Task GetAllAmenities_ShouldReturnOk_WhenUserIsValid()
+    {
+        // Arrange
+        var expectedAmenities = new List<AmenityResponseDto> 
+        { 
+            new AmenityResponseDto { Id = Guid.NewGuid(), Name = "WiFi" } 
+        };
+
+        _serviceMock.Setup(s => s.GetAllAmenities())
+                    .ReturnsAsync(expectedAmenities);
+
+        // Act
+        var result = await _controller.GetAllAmenities();
+
+        // Assert
+        var okResult = result as OkObjectResult;
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult.StatusCode, Is.EqualTo(200));
+        Assert.That(okResult.Value, Is.EqualTo(expectedAmenities));
+    }
+
+    [Test]
+    public async Task GetAllAmenities_ShouldReturnUnauthorized_WhenUserClaimIsMissing()
+    {
+        // Arrange: Simula ausência de Claim de usuário (Branch Coverage: if (string.IsNullOrEmpty...))
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext() // Contexto sem Claims
+        };
+
+        // Act
+        var result = await _controller.GetAllAmenities();
+
+        // Assert
+        Assert.That(result, Is.InstanceOf<UnauthorizedResult>());
+    }
+
+    [Test]
+    public async Task GetAllAmenities_ShouldReturnBadRequest_WhenExceptionIsThrown()
+    {
+        // Arrange: Força entrada no bloco catch (Branch Coverage: Exception ex)
+        var errorMessage = "Erro inesperado ao buscar comodidades";
+        _serviceMock.Setup(s => s.GetAllAmenities())
+                    .ThrowsAsync(new Exception(errorMessage));
+
+        // Act
+        var result = await _controller.GetAllAmenities();
+
+        // Assert
+        var badRequest = result as BadRequestObjectResult;
+        Assert.That(badRequest, Is.Not.Null);
+        Assert.That(badRequest.StatusCode, Is.EqualTo(400));
+
+        // Usando reflexão para ler objeto anônimo { message = ... }
+        var message = badRequest.Value.GetType().GetProperty("message").GetValue(badRequest.Value, null) as string;
+        Assert.That(message, Is.EqualTo(errorMessage));
+    }
     
     [Test]
     public async Task GetAvailability_Success_ShouldReturnOkWithList()
