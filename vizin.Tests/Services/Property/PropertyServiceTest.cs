@@ -135,6 +135,55 @@ public class PropertyServiceTests
         Assert.ThrowsAsync<ArgumentException>(async () =>
             await _service.UpdateProperty(dto, _userId, propertyId));
     }
+
+    [TestCase(null)]
+    [TestCase(0)]
+    public void UpdateProperty_ShouldThrowArgumentException_WhenCapacityIsInvalid(int? invalidCapacity)
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var property = new TbProperty { UserId = _userId };
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = invalidCapacity };
+
+        _propertyRepoMock.Setup(x => x.GetPropertyById(propertyId)).ReturnsAsync(property);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _service.UpdateProperty(dto, _userId, propertyId));
+        Assert.That(ex.Message, Is.EqualTo("Capacidade inválida"));
+    }
+
+    [Test]
+    public void UpdateProperty_ShouldThrowArgumentException_WhenAccomodationTypeIsInvalid()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var property = new TbProperty { UserId = _userId };
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = 2, AccomodationType = 0 };
+
+        _propertyRepoMock.Setup(x => x.GetPropertyById(propertyId)).ReturnsAsync(property);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _service.UpdateProperty(dto, _userId, propertyId));
+        Assert.That(ex.Message, Is.EqualTo("Tipo de acomodação inválida."));
+    }
+
+    [Test]
+    public void UpdateProperty_ShouldThrowArgumentException_WhenPropertyCategoryIsInvalid()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var property = new TbProperty { UserId = _userId };
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = 2, AccomodationType = 1, PropertyCategory = -1 };
+
+        _propertyRepoMock.Setup(x => x.GetPropertyById(propertyId)).ReturnsAsync(property);
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _service.UpdateProperty(dto, _userId, propertyId));
+        Assert.That(ex.Message, Is.EqualTo("Tipo de categoria errada"));
+    }
     
     [Test]
     public async Task CreateProperty_ShouldReturnResponse_WhenEverythingIsValid()
@@ -170,7 +219,77 @@ public class PropertyServiceTests
         });
     }
     
-    //aqui
+    [Test]
+    public void CreateProperty_ShouldThrowKeyNotFoundException_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        _userRepoMock.Setup(r => r.SelectUserById(userId)).ReturnsAsync((TbUser)null);
+
+        // Act & Assert
+        Assert.ThrowsAsync<KeyNotFoundException>(async () => 
+            await _service.CreateProperty(new PropertyCreateDto(), userId));
+    }
+
+    [TestCase(null)]
+    [TestCase(0.0)]
+    [TestCase(-10.0)]
+    public void CreateProperty_ShouldThrowArgumentException_WhenDailyValueIsInvalid(decimal? invalidValue)
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var dto = new PropertyCreateDto { DailyValue = invalidValue };
+        _userRepoMock.Setup(r => r.SelectUserById(userId)).ReturnsAsync(new TbUser { Id = userId });
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.CreateProperty(dto, userId));
+        Assert.That(ex.Message, Is.EqualTo("Diária inválida"));
+    }
+
+    [TestCase(null)]
+    [TestCase(0)]
+    public void CreateProperty_ShouldThrowArgumentException_WhenCapacityIsInvalid(int? invalidCapacity)
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = invalidCapacity };
+        _userRepoMock.Setup(r => r.SelectUserById(userId)).ReturnsAsync(new TbUser { Id = userId });
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.CreateProperty(dto, userId));
+        Assert.That(ex.Message, Is.EqualTo("Capacidade inválida"));
+    }
+
+    [Test]
+    public void CreateProperty_ShouldThrowArgumentException_WhenAccomodationTypeIsInvalid()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = 2, AccomodationType = 0 };
+        _userRepoMock.Setup(r => r.SelectUserById(userId)).ReturnsAsync(new TbUser { Id = userId });
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.CreateProperty(dto, userId));
+        Assert.That(ex.Message, Is.EqualTo("Tipo de acomodação inválida."));
+    }
+
+    [Test]
+    public void CreateProperty_ShouldThrowArgumentException_WhenPropertyCategoryIsInvalid()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var dto = new PropertyCreateDto { DailyValue = 100, Capacity = 2, AccomodationType = 1, PropertyCategory = -1 };
+        _userRepoMock.Setup(r => r.SelectUserById(userId)).ReturnsAsync(new TbUser { Id = userId });
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentException>(async () => 
+            await _service.CreateProperty(dto, userId));
+        Assert.That(ex.Message, Is.EqualTo("Tipo de categoria errada"));
+    }
+    
    [Test]
     public async Task UpdateDailyValueAsync_WhenValid_ShouldUpdateAndReturnDto()
     {
@@ -278,8 +397,6 @@ public class PropertyServiceTests
         // Garante que o repositório NUNCA foi chamado para salvar, já que falhou na validação
         _propertyRepoMock.Verify(r => r.PatchAsync(It.IsAny<vizin.Models.TbProperty>()), Times.Never);
     }
-
-    //até aqui
 
     [Test]
     public async Task AddAmenitiesAsync_ShouldAddAmenity_WhenValid()
