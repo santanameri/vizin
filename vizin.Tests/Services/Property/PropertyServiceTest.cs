@@ -600,7 +600,7 @@ public class PropertyServiceTests
         var ex = Assert.ThrowsAsync<Exception>(async () => 
             await _service.GetAvailableProperties(filter));
         
-        Assert.That(ex.Message, Is.EqualTo("Data de check-in inválida"));
+        Assert.That(ex.Message, Is.EqualTo("Check-out deve ser após o check-in"));
     }
 
     [Test]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using vizin.Models.Enum;
 
 namespace vizin.Models;
 
@@ -9,7 +10,7 @@ public partial class TbPayment
 
     public Guid BookingId { get; set; }
 
-    public int PaymentMethod { get; set; }
+    public PaymentMethodType PaymentMethod { get; set; }
 
     public decimal Amount { get; set; }
 

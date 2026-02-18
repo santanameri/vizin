@@ -9,4 +9,6 @@ public interface IBookingRepository
     Task<TbBooking> CreateAsync(TbBooking booking);
     Task<List<TbBooking>> GetHostBookingsAsync(Guid hostId);
     Task<List<TbBooking>> GetGuestBookingsAsync(Guid guestId);
+    Task<TbBooking?> GetByIdAsync(Guid id);
+    Task UpdateAsync(TbBooking booking);
 }
