@@ -78,4 +78,24 @@ public class BookingService : IBookingService
         return history;
     }
     
+    public async Task<bool> CancelBookingAsync(Guid bookingId, Guid userId)
+    {
+        var booking = await _bookingRepo.GetByIdAsync(bookingId);
+
+        if (booking == null) throw new Exception("Reserva não encontrada.");
+
+        // Validação: Apenas o dono da reserva pode cancelar
+        if (booking.UserId != userId) throw new Exception("Acesso negado.");
+
+        // Validação de Status (3 = Cancelado, 4 = Finalizado)
+        if (booking.Status == 3) throw new Exception("Reserva já está cancelada.");
+        if (booking.Status == 4) throw new Exception("Não é possível cancelar uma reserva finalizada.");
+
+        // Regra: Atualiza para status 3 (Cancelado)
+        booking.Status = 3;
+        booking.CancelationDate = DateTime.Now;
+
+        await _bookingRepo.UpdateAsync(booking);
+        return true;
+    }
 }

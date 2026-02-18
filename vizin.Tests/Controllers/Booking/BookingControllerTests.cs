@@ -149,5 +149,57 @@ public class BookingControllerTests
         // Verifica se passou null quando a claim de role não existe
         _serviceMock.Verify(s => s.GetUserBookingHistoryAsync(_userId, null), Times.Once);
     }
+    
+    [Test]
+    public async Task CancelBooking_DeveRetornarOk_QuandoServicoExecutaComSucesso()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+
+        _serviceMock
+            .Setup(s => s.CancelBookingAsync(bookingId, _userId))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _controller.CancelBooking(bookingId);
+
+        // Assert
+        var okResult = result as OkObjectResult;
+
+        Assert.That(okResult, Is.Not.Null);
+        Assert.That(okResult!.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+
+        _serviceMock.Verify(
+            s => s.CancelBookingAsync(bookingId, _userId),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CancelBooking_DeveRetornarBadRequest_QuandoServicoLancarExcecao()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+        var exceptionMessage = "Erro ao cancelar reserva";
+
+        _serviceMock
+            .Setup(s => s.CancelBookingAsync(bookingId, _userId))
+            .ThrowsAsync(new Exception(exceptionMessage));
+
+        // Act
+        var result = await _controller.CancelBooking(bookingId);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+
+        Assert.That(badRequestResult, Is.Not.Null);
+        Assert.That(badRequestResult!.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+
+        _serviceMock.Verify(
+            s => s.CancelBookingAsync(bookingId, _userId),
+            Times.Once
+        );
+    }
+
 
 }

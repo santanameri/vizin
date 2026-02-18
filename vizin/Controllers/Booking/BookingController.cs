@@ -49,4 +49,21 @@ public class BookingController : ControllerBase
         var history = await _service.GetUserBookingHistoryAsync(userId, userRole);
         return Ok(history);
     }
+
+    [Authorize(Policy = "HospedeOnly")]
+    [HttpPatch("{bookingId:guid}/cancel")]
+    public async Task<IActionResult> CancelBooking([FromRoute] Guid bookingId)
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _service.CancelBookingAsync(bookingId, userId);
+            
+            return Ok(new { message = "Reserva cancelada com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
