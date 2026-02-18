@@ -26,7 +26,7 @@ public class BookingServiceTests
     public async Task CreateBooking_Success_ShouldReturnCorrectDto()
     {
         var propertyId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
+        var userId = _userId;
         var checkIn = DateTime.UtcNow.AddDays(1).Date;
         var checkOut = DateTime.UtcNow.AddDays(3).Date;
         var dto = new CreateBookingDto

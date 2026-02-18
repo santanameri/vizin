@@ -54,4 +54,16 @@ public class BookingRepository : IBookingRepository
             .OrderByDescending(b => b.CheckinDate)
             .ToListAsync();
     }
+    
+    public async Task<TbBooking?> GetByIdAsync(Guid id)
+    {
+        return await _context.TbBookings
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
+    public async Task UpdateAsync(TbBooking booking)
+    {
+        _context.Entry(booking).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+    }
 }
