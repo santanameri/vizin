@@ -593,15 +593,20 @@ public class PropertyServiceTests
     [Test]
     public void GetAvailableProperties_CheckInInPast_ShouldThrowException()
     {
-        // Arrange
-        var filter = new AvailabilityFilterDto { CheckIn = DateTime.UtcNow.AddDays(-1) };
+        var filter = new AvailabilityFilterDto 
+        { 
+            CheckIn = DateTime.Today.AddDays(-1), 
+            CheckOut = DateTime.Today.AddDays(1) // Garante que o checkout seja válido
+        };
 
         // Act & Assert
         var ex = Assert.ThrowsAsync<Exception>(async () => 
             await _service.GetAvailableProperties(filter));
-        
-        Assert.That(ex.Message, Is.EqualTo("Check-out deve ser após o check-in"));
+    
+        // Agora a mensagem deve bater com a primeira validação
+        Assert.That(ex.Message, Is.EqualTo("Data de check-in inválida"));
     }
+    
 
     [Test]
     public void GetAvailableProperties_InvalidDateRange_ShouldThrowException()

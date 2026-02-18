@@ -7,7 +7,8 @@ using vizin.Services.Booking.Interfaces;
 namespace vizin.Controllers.Payment;
 
 [ApiController]
-[Authorize(Policy = "HospedesOnly")] 
+[Authorize(Policy = "HospedeOnly")]
+[Route("[controller]")]
 public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
@@ -17,8 +18,8 @@ public class PaymentController : ControllerBase
         _paymentService = paymentService;
     }
 
-    [HttpPost("{bookingId}/pay")]
-    public async Task<IActionResult> Pay(Guid bookingId, [FromBody] PaymentRequestDto dto)
+    [HttpPost("{bookingId:guid}/pay")]
+    public async Task<IActionResult> Pay([FromRoute] Guid bookingId, [FromBody] PaymentRequestDto dto)
     {
         try
         {

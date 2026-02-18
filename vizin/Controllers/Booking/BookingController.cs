@@ -24,10 +24,8 @@ public class BookingController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
         var userId = Guid.Parse(userIdClaim);
-        Console.WriteLine("aqui...");
         try
         {
-            Console.WriteLine("Creating new booking");
             var booking = await _service.CreateBooking(userId, propertyId, dto);
            return Ok(booking);
         }

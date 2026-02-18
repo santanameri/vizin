@@ -17,7 +17,8 @@ using vizin.Services.User;
 using vizin.Services.User.Interface;
 using vizin.Services.Favorite;           
 using vizin.Services.Favorite.Interfaces; 
-using vizin.Repositories;  
+using vizin.Repositories.Booking.Payment;
+using vizin.Services.Booking.Payment;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -83,6 +84,8 @@ builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddAuthorization((options =>
 {
     options.AddPolicy("HospedeOnly", policy => policy.RequireRole("Hospede"));

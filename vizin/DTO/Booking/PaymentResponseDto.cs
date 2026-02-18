@@ -7,6 +7,5 @@ public class PaymentResponseDto
     public string Status { get; set; } // "Pago", "Falhou", etc.
     public decimal Amount { get; set; }
     public DateTime PaymentDate { get; set; }
-    public string Message { get; set; }
     public bool Success { get; set; }
 }
