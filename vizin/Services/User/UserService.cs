@@ -20,6 +20,7 @@ public class UserService : IUserService
         if (user == null) return null;
         var userDto = new UserResponseDTO()
         {
+            Id = user.Id,
             Name = user.Name,
             Email = user.Email,
             CreatedAt = user.CreatedAt,
