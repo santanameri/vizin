@@ -31,9 +31,9 @@ public class ReviewController : ControllerBase
 
             var authorId = Guid.Parse(userIdClaim);
 
-            await _reviewService.CreateBookingReviewAsync(authorId, bookingId, dto);
+            var reviewId = await _reviewService.CreateBookingReviewAsync(authorId, bookingId, dto);
 
-            return Ok(new { message = "Avaliação enviada com sucesso!" });
+            return Ok(new { id = reviewId, message = "Avaliação enviada com sucesso!" });
         }
         catch (Exception ex)
         {

@@ -19,7 +19,7 @@ public class ReviewService: IReviewService
     }
 
     // 1. Hóspede avalia o Imóvel
-    public async Task CreateBookingReviewAsync(Guid authorId, Guid bookingId, ReviewRequestDto dto)
+    public async Task<Guid> CreateBookingReviewAsync(Guid authorId, Guid bookingId, ReviewRequestDto dto)
     {
         var booking = await _bookingRepo.GetByIdAsync(bookingId);
 
@@ -38,10 +38,10 @@ public class ReviewService: IReviewService
         if (existingReview != null)
             throw new Exception("Esta reserva já foi avaliada.");
 
-        // 4. Cria a entidade conforme sua classe TbReview
+        var reviewId = Guid.NewGuid();
         var review = new TbReview
         {
-            Id = Guid.NewGuid(),
+            Id = reviewId,
             UserId = authorId,
             BookingId = bookingId,
             Note = dto.Stars, 
@@ -50,6 +50,7 @@ public class ReviewService: IReviewService
         };
 
         await _reviewRepo.CreateAsync(review);
+        return reviewId;
     }
     
     // 3. Remover Avaliação
