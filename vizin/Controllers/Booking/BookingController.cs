@@ -77,9 +77,16 @@ public class BookingController : ControllerBase
             var hostId = Guid.Parse(userIdClaim);
 
             var fileBytes = await _service.GenerateHostReportAsync(hostId);
-        
+            var fileName = $"relatorio_reservas_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Relatorios");
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+            var fullPath = Path.Combine(folderPath, fileName);
+            await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
             // Retorna o arquivo com o nome personalizado
-            return File(fileBytes, "text/csv", $"relatorio_reservas_{DateTime.Now:yyyyMMdd}.csv");
+            return File(fileBytes, "text/csv", fileName);
         }
         catch (Exception ex)
         {
