@@ -39,21 +39,26 @@ A URL base da aplicação é `http://localhost:5066/`.
 
 - `POST /user`: Cadastra um novo usuário (Hóspede/Anfitrião).
 - `POST /user/login`: Autentica e retorna o Token JWT.
-- `GET /user/{id}`: Recupera informações do perfil.
+- `GET /user/{userId}`: Recupera informações do perfil.
 
 ### 🏠 Imóveis (`/property`)
 
-- `GET /property`: Lista todos os imóveis (Apenas Hóspedes).
+- `GET /property`: Lista todos os imóveis (Hóspedes).
+- `GET /property/my`: Lista todos os imóveis do anfitrião logado.
 - `POST /property`: Cadastra um novo imóvel (Apenas Anfitriões).
-- `PATCH /property/{id}`: Atualiza o valor da diária.
-- `PUT /property/{id}`: Atualiza o imóvel.
-- `POST /property/add-amenity/{id}`: Adiciona comodidades ao imóvel.
+- `PATCH /property/{propertyId}`: Atualiza o valor da diária.
+- `PUT /property/{propertyId}`: Atualiza o imóvel.
+- `GET /property/amenities`: Lista todas as comodidades.
+- `POST /property/add-amenity/{amnenityId}`: Adiciona comodidades ao imóvel.
+- `GET /property/filter?estado={estado}`: Filtra por endereço.
+- `GET /property/filter-amenities/?amenityIds={amenityId}`: Filtra por comodidade.
+- `GET /bookings/availability/?checkIn=0000-00-00&checkOut=0000-00-00`: Verificar disponibilidade - pode ser um sub-recurso ou query em properties)
 
 ### 📅 Reservas (`/booking`)
 
 - `POST /booking/{propertyId}/book`: Cria uma nova reserva.
 - `GET /booking/my-bookings`: Lista o histórico de reservas do usuário logado.
-- `PATCH /booking/{id}/cancel`: Cancela uma reserva existente.
+- `PATCH /booking/{bookingId}/cancel`: Cancela uma reserva existente.
 - `GET /booking/report`: Gera relatório em CSV (Apenas Anfitriões).
 
 ### 💳 Pagamentos e Extras
@@ -61,6 +66,7 @@ A URL base da aplicação é `http://localhost:5066/`.
 - `POST /payment/{bookingId}/pay`: Processa o pagamento da reserva.
 - `POST /favorite/toggle`: Adiciona/Remove imóvel dos favoritos.
 - `POST /review/{bookingId}`: Registra uma avaliação após a estadia.
+- `DELETE /review/{reviewId}`: Apaga a review cadastrada (Hóspede).
 
 ## Regras de Negócio
 
