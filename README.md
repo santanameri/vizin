@@ -64,7 +64,9 @@ A URL base da aplicação é `http://localhost:5066/`.
 
 ## Regras de Negócio
 
-- **Política de Cancelamento:** Aplicação de multa de 50% para cancelamentos realizados em menos de 48h.
+- Apenas o dono do imóvel pode criá-lo e editá-lo
+- Capacidade do imóvel deve ser maior que zero
+- Valor da diária nunca pode ser zero ou negativo
 - **Políticas de Acesso:** Certas rotas são restritas a Anfitriões (`AnfitriaoOnly`) ou Hóspedes (`HospedeOnly`) via atributos de autorização do ASP.NET.
 
 ### Como executar
